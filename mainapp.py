@@ -1,5 +1,5 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.3 - Full Persistence)
+#  Status: PRODUCTION (v2.4 - Final Deployment)
 #  Architecture: Hybrid Streaming + "Data Refinery" Utility
 #
 import io
@@ -894,15 +894,16 @@ def render_workflow_guide():
         *   **Best for:** PDFs, PowerPoints, Transcripts, or CSVs/JSON files.
         *   **How:** 
             1. Upload your files in the sidebar.
-            2. Review the **"Scan Configuration"** box that appears in the main area (select specific columns for CSVs, etc.).
-            3. Click the **"⚡ Start Scan"** button for each file.
-        *   **Result:** The app processes the file into a lightweight statistical "Sketch" and generates a "Quick View" Word Cloud. Once all files are scanned, the aggregate analysis appears below.
+            2. **Crucial Step:** A "Scan Configuration" box will appear for each file. 
+            3. **For Trends:** Select your **Date Column** in this box.
+            4. **For Segmentation:** Select your **Category Column** (e.g., "Department").
+            5. Click **"⚡ Start Scan"**.
+        *   **Result:** The app processes the file into a lightweight statistical "Sketch" and generates a "Quick View" Word Cloud.
 
         #### B. The "Deep Scan" (Large Datasets)
         *   **Best for:** Massive text dumps (>200MB) where memory is a concern.
-        *   **How:** Same as above, but the engine uses **Streaming Mode**.
+        *   **How:** Same as above. The engine automatically switches to **Streaming Mode**.
         *   **Mechanism:** It reads the file in small chunks, extracts statistics, and immediately discards the raw text to save memory.
-        *   **Benefit:** This allows you to process datasets larger than your available RAM.
 
         #### C. The "Enterprise" Workflow (Offline/Secure)
         *   **Best for:** Massive datasets (10M+ rows) or sensitive data (PII) that cannot leave your secure server.
@@ -912,13 +913,17 @@ def render_workflow_guide():
 
         ### 🧠 2. Interpret the Analytics
 
+        #### 📈 Trends & Entities (New!)
+        *   **Temporal Trends:** See how specific words (e.g., "Error", "Happy") rise and fall over time. Requires a selected Date Column.
+        *   **Entities:** The engine automatically detects Capitalized Names (People, Orgs) using heuristic matching.
+        *   **Keyphrases (TF-IDF):** Highlights words that are *unique* to specific documents, ignoring generic fluff words.
+
         #### 🕸️ Network Graph & Community Detection
         *   **The Concept:** Maps how words connect. If "Battery" frequently appears near "Drain," a line connects them.
-        *   **Communities (Colors):** Nodes are colored by cluster. If distinct color groups appear, you have successfully separated different conversation topics (e.g., "Login Issues" vs. "Billing Issues").
+        *   **Communities (Colors):** Nodes are colored by cluster. Distinct colors usually indicate distinct conversation topics.
 
         #### 🔬 NPMI (Phrase Significance)
-        *   **The Problem:** Raw frequency often highlights boring pairs (e.g., "of the", "to be").
-        *   **The Solution:** NPMI (Normalized Pointwise Mutual Information) measures *surprise*. It highlights words that appear together *more often than random chance* (e.g., "Credit Card", "Customer Service"). High scores (>0.5) indicate strong semantic links.
+        *   **The Solution:** NPMI measures *surprise*. It highlights words that appear together *more often than random chance* (e.g., "Credit Card" vs. "of the"). High scores (>0.5) indicate strong semantic links.
 
         #### 🔍 Bayesian Theme Discovery (Topic Modeling)
         *   **LDA Model:** Best for long text (essays/reports). Assumes documents are a "smoothie" of mixed topics.
@@ -926,11 +931,6 @@ def render_workflow_guide():
 
         #### ⚖️ Bayesian Sentiment Inference
         *   **The Value:** Standard sentiment analysis gives you a raw score. This engine calculates a **Credible Interval** (e.g., "We are 95% confident the true positive rate is between 55% and 65%"). This protects you from making business decisions based on small sample sizes.
-
-        #### 👥 Entities & Trends (New!)
-        *   **Trends:** If your CSV has a date column, this shows how volume and key terms shift over time.
-        *   **Entities:** Heuristic detection of People and Organizations.
-        *   **Keyphrases (TF-IDF):** Scores words by how "Unique" they are to specific documents, filtering out generic noise.
 
         ---
 
