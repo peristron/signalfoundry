@@ -1,5 +1,5 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.4 - Final Deployment)
+#  Status: PRODUCTION (v2.5 - Fixed Font Path NameError)
 #  Architecture: Hybrid Streaming + "Data Refinery" Utility
 #
 import io
@@ -1146,6 +1146,12 @@ with st.sidebar:
     bg_color = st.color_picker("BG Color", "#ffffff")
     colormap = st.selectbox("Colormap", ["viridis", "plasma", "inferno", "magma", "cividis", "tab10", "Blues", "Reds", "Greys"], 0)
     top_n = st.number_input("Top Terms to Display", min_value=5, max_value=1000, value=20)
+    max_words = st.slider("Max Words (Cloud)", 50, 3000, 1000, 50)
+    
+    # Font Selection (Restored)
+    font_map, font_names = list_system_fonts(), list(list_system_fonts().keys())
+    combined_font_name = st.selectbox("Font", font_names or ["(default)"], 0)
+    combined_font_path = font_map.get(combined_font_name) if font_names else None
 
     st.markdown("### 🔬 Sentiment")
     enable_sentiment = st.checkbox("Enable Sentiment", False)
@@ -1305,10 +1311,10 @@ if combined_counts:
                  top_bg_keys = [" ".join(k) for k,v in scanner.global_bigrams.most_common(2000)]
                  term_sentiments.update(get_sentiments(analyzer, tuple(top_bg_keys)))
             c_color_func = create_sentiment_color_func(term_sentiments, pos_color, neg_color, neu_color, pos_threshold, neg_threshold)
-            fig, _ = build_wordcloud_figure_from_counts(combined_counts, 800, 800, 400, bg_color, colormap, combined_font_path, 42, c_color_func)
+            fig, _ = build_wordcloud_figure_from_counts(combined_counts, max_words, 800, 400, bg_color, colormap, combined_font_path, 42, c_color_func)
         else:
             term_sentiments = {}
-            fig, _ = build_wordcloud_figure_from_counts(combined_counts, 800, 800, 400, bg_color, colormap, combined_font_path, 42, None)
+            fig, _ = build_wordcloud_figure_from_counts(combined_counts, max_words, 800, 400, bg_color, colormap, combined_font_path, 42, None)
             
         st.pyplot(fig, use_container_width=True)
         st.download_button("📥 download combined png", fig_to_png_bytes(fig), "combined_wc.png", "image/png")
