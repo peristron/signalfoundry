@@ -1,6 +1,6 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.0 Full Integration)
-#  Features: Streaming, Sketches, Lemmatization, NER Lite, Time-Series, TF-IDF, Graphs
+#  Status: PRODUCTION (v2.1 - Full Legacy Feature Set + New NLP Engine)
+#  Features: Streaming, Sketches, Lemmatization, NER Lite, Time-Series, TF-IDF, Full Graphs, AI Chat
 #
 import io
 import os
@@ -411,7 +411,7 @@ def read_rows_raw_lines(file_bytes: bytes, encoding_choice: str = "auto") -> Ite
         yield ("", None, None)
 
 def read_rows_vtt(file_bytes: bytes, encoding_choice: str = "auto") -> Iterable[Tuple[str, None, None]]:
-    # Re-using the logic for VTT parsing but yielding tuples
+    # Robust VTT reader that yields tuples
     def _iter_lines(enc):
         bio = io.BytesIO(file_bytes)
         with io.TextIOWrapper(bio, encoding=enc, errors="replace", newline=None) as wrapper:
@@ -1018,7 +1018,7 @@ with st.sidebar:
             else:
                 api_key_name = "xai_api_key"
                 base_url = "https://api.x.ai/v1"
-                model_name = "grok-4-0709" # Simplified for brevity, expandable if needed
+                model_name = "grok-4-0709" 
                 price_in, price_out = 3.00, 15.00
             
             api_key = st.secrets.get(api_key_name)
@@ -1047,7 +1047,7 @@ with st.sidebar:
         remove_chat=st.checkbox("Remove Chat Artifacts", True, help="Strips metadata timestamps/usernames."),
         remove_html=st.checkbox("Remove HTML", True),
         remove_urls=st.checkbox("Remove URLs", True),
-        unescape=st.checkbox("Unescape HTML", True)
+        unescape=st.checkbox("Unescape HTML", True, help="Converts coded entities (e.g., &amp;) back into readable symbols (&).")
     )
     
     st.markdown("**Processing**")
@@ -1073,7 +1073,8 @@ with st.sidebar:
     st.markdown("### 🎨 Appearance")
     bg_color = st.color_picker("BG Color", "#ffffff")
     colormap = st.selectbox("Colormap", ["viridis", "plasma", "inferno", "magma", "cividis", "tab10", "Blues", "Reds", "Greys"], 0)
-    
+    top_n = st.number_input("Top Terms to Display", min_value=5, max_value=1000, value=20)
+
     st.markdown("### 🔬 Sentiment")
     enable_sentiment = st.checkbox("Enable Sentiment", False)
     if enable_sentiment and analyzer is None:
@@ -1166,10 +1167,6 @@ if all_inputs:
                     sheets = get_excel_sheetnames(file_bytes)
                     scan_settings["sheet_name"] = st.selectbox("Sheet", sheets, key=f"sheet_{idx}")
                     if scan_settings["sheet_name"]:
-                         # Lightweight header peek for excel
-                         cols = [] 
-                         # (Ideally we peek headers here, but strictly relying on user assumption for simplicity in UI re-render)
-                         # We'll assume header row present for structured scan
                          scan_settings["has_header"] = st.checkbox("Has Header Row", True, key=f"xls_head_{idx}")
                 elif is_json:
                     scan_settings["json_key"] = st.text_input("JSON Key (Optional)", "", key=f"json_{idx}")
@@ -1189,16 +1186,8 @@ if all_inputs:
                         scan_settings["text_cols"], scan_settings["date_col"], scan_settings["cat_col"], " "
                     )
                 elif is_xlsx and scan_settings["sheet_name"]:
-                    # Assume first col is text if not configured (simplification for robustness)
-                    # For full robust excel config, we'd need a peek-step like CSV. 
-                    # Here we default to scanning all cols as text unless we add UI.
-                    # We will revert to simple "Iter all" for excel unless we add column picker UI logic for Excel too.
-                    # Implementing a simple version:
                     rows_iter = iter_excel_structured(
                         file_bytes, scan_settings["sheet_name"], scan_settings["has_header"], 
-                        # Hack: Without picker, we can't know cols. We'll rely on CSV logic mostly.
-                        # For robustness in this full version: Fallback to simple line reading if no cols selected?
-                        # Let's use column 0 as text default if not structured.
                         ["col_0"], None, None, " " 
                     )
                 elif is_pdf:
@@ -1210,7 +1199,6 @@ if all_inputs:
                 elif is_json:
                     rows_iter = read_rows_json(file_bytes, scan_settings["json_key"])
                 else:
-                    # Fallback raw line reader
                     rows_iter = read_rows_raw_lines(file_bytes)
                 
                 # Run
@@ -1230,24 +1218,28 @@ if combined_counts:
     st.divider()
     st.header("📊 Analysis Dashboard")
     
+    # Calculate stats upfront
+    text_stats = calculate_text_stats(combined_counts, scanner.total_rows_processed)
+    
     # 1. Main Tabs
     tab_main, tab_trend, tab_ent, tab_key = st.tabs(["☁️ Word Cloud & Stats", "📈 Trends", "👥 Entities", "🔑 Keyphrases"])
     
     with tab_main:
-        # Standard Word Cloud
         if enable_sentiment:
             top_keys = [k for k,v in combined_counts.most_common(1000)]
             term_sentiments = get_sentiments(analyzer, tuple(top_keys))
+            if proc_conf.compute_bigrams:
+                 top_bg_keys = [" ".join(k) for k,v in scanner.global_bigrams.most_common(2000)]
+                 term_sentiments.update(get_sentiments(analyzer, tuple(top_bg_keys)))
             c_color_func = create_sentiment_color_func(term_sentiments, pos_color, neg_color, neu_color, pos_threshold, neg_threshold)
             fig, _ = build_wordcloud_figure_from_counts(combined_counts, 800, 800, 400, bg_color, colormap, combined_font_path, 42, c_color_func)
         else:
+            term_sentiments = {}
             fig, _ = build_wordcloud_figure_from_counts(combined_counts, 800, 800, 400, bg_color, colormap, combined_font_path, 42, None)
             
         st.pyplot(fig, use_container_width=True)
         st.download_button("📥 download combined png", fig_to_png_bytes(fig), "combined_wc.png", "image/png")
         
-        # Stats
-        text_stats = calculate_text_stats(combined_counts, scanner.total_rows_processed)
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Total Tokens", f"{text_stats['Total Tokens']:,}")
         c2.metric("Unique Vocab", f"{text_stats['Unique Vocabulary']:,}")
@@ -1257,7 +1249,6 @@ if combined_counts:
     with tab_trend:
         if scanner.temporal_counts:
             st.markdown("#### Word Volume Over Time")
-            # Convert temporal dict to DF
             trend_data = []
             for d_str, counts in scanner.temporal_counts.items():
                 trend_data.append({"Date": d_str, "Volume": sum(counts.values())})
@@ -1283,8 +1274,6 @@ if combined_counts:
         if scanner.entity_counts:
             ent_df = pd.DataFrame(scanner.entity_counts.most_common(50), columns=["Entity", "Count"])
             st.dataframe(ent_df, use_container_width=True)
-            
-            # Simple Entity Cloud
             fig_e, _ = build_wordcloud_figure_from_counts(scanner.entity_counts, 100, 800, 400, "#111111", "Pastel1", None, 42, None)
             st.pyplot(fig_e)
         else:
@@ -1300,17 +1289,12 @@ if combined_counts:
     
     # 2. Advanced Sections
     
-    # Bayesian Sentiment
     if enable_sentiment and beta_dist:
         st.subheader("⚖️ Bayesian Sentiment Inference")
-        # Calc sentiments for top terms
-        top_k = [k for k,v in combined_counts.most_common(SENTIMENT_ANALYSIS_TOP_N)]
-        ts = get_sentiments(analyzer, tuple(top_k))
-        
         with st.expander("🧠 How to read this chart", expanded=False):
             st.markdown("Shows the probability distribution of the 'True' sentiment, accounting for sample size uncertainty.")
 
-        bayes_result = perform_bayesian_sentiment_analysis(combined_counts, ts, pos_threshold, neg_threshold)
+        bayes_result = perform_bayesian_sentiment_analysis(combined_counts, term_sentiments, pos_threshold, neg_threshold)
         if bayes_result:
             b_col1, b_col2 = st.columns([1, 2])
             with b_col1:
@@ -1326,9 +1310,9 @@ if combined_counts:
                 st.pyplot(fig_bayes)
                 plt.close(fig_bayes)
 
-    # Graph
     show_graph = proc_conf.compute_bigrams and scanner.global_bigrams and st.checkbox("🕸️ Show Network Graph", value=True)
     if show_graph:
+        st.subheader("🔗 Network Graph")
         with st.expander("🛠️ Graph Settings", expanded=False):
             c1, c2, c3 = st.columns(3)
             min_edge_weight = c1.slider("Min Link Freq", 2, 100, 2)
@@ -1363,7 +1347,7 @@ if combined_counts:
                 size = 15 + (deg_centrality.get(node_id, 0) * 80)
                 node_color = "#808080"
                 if color_mode == "Sentiment" and enable_sentiment:
-                    s = ts.get(node_id, 0)
+                    s = term_sentiments.get(node_id, 0)
                     if s >= pos_threshold: node_color = pos_color
                     elif s <= neg_threshold: node_color = neg_color
                 elif color_mode == "Topic":
@@ -1380,8 +1364,18 @@ if combined_counts:
             st.info("Scroll to zoom.")
             agraph(nodes=nodes, edges=edges, config=config)
             
-            # Heatmap
-            with st.expander("🔥 Co-occurrence Heatmap"):
+            # Graph Analytics Tabs (Restored)
+            tab_g1, tab_g2, tab_g3 = st.tabs(["Top Nodes", "Text Stats", "🔥 Heatmap"])
+            with tab_g1:
+                node_weights = {n: 0 for n in G.nodes()}
+                for u, v, data in G.edges(data=True):
+                    w = data.get('weight', 1)
+                    node_weights[u] += w
+                    node_weights[v] += w
+                st.dataframe(pd.DataFrame(list(node_weights.items()), columns=["Node", "Weighted Degree"]).sort_values("Weighted Degree", ascending=False).head(50), use_container_width=True)
+            with tab_g2:
+                 st.metric("Graph Density", f"{nx.density(G):.4f}")
+            with tab_g3:
                 top_20 = [w for w, c in combined_counts.most_common(20)]
                 if len(top_20) > 1:
                     mat = np.zeros((len(top_20), len(top_20)))
@@ -1391,10 +1385,9 @@ if combined_counts:
                     fig_h, ax_h = plt.subplots(figsize=(10, 8))
                     ax_h.imshow(mat, cmap="Blues")
                     ax_h.set_xticks(np.arange(len(top_20))); ax_h.set_yticks(np.arange(len(top_20)))
-                    ax_h.set_xticklabels(top_20, rotation=45); ax_h.set_yticklabels(top_20)
+                    ax_h.set_xticklabels(top_20, rotation=45, ha="right"); ax_h.set_yticklabels(top_20)
                     st.pyplot(fig_h)
 
-    # Topics
     st.subheader("🔍 Bayesian Theme Discovery")
     if len(scanner.topic_docs) > 5 and DictVectorizer:
         with st.spinner("Modeling..."):
@@ -1408,12 +1401,43 @@ if combined_counts:
     else:
         st.info("Needs more data/docs to model topics.")
 
+    # Restored Detailed Frequency Tables
+    st.divider()
+    st.subheader(f"📊 Frequency Tables (Top {top_n})")
+    most_common = combined_counts.most_common(top_n)
+    data = []
+    if enable_sentiment:
+        for w, f in most_common:
+            score = term_sentiments.get(w, 0.0)
+            category = get_sentiment_category(score, pos_threshold, neg_threshold)
+            data.append([w, f, score, category])
+    else:
+        data = [[w, f] for w, f in most_common]
+
+    cols = ["word", "count"] + (["sentiment", "category"] if enable_sentiment else [])
+    st.dataframe(pd.DataFrame(data, columns=cols), use_container_width=True)
+    
+    if proc_conf.compute_bigrams and scanner.global_bigrams:
+        st.write("Bigrams (By Frequency)")
+        top_bg = scanner.global_bigrams.most_common(top_n)
+        bg_data = []
+        if enable_sentiment:
+            for bg_tuple, f in top_bg:
+                bg_str = " ".join(bg_tuple)
+                score = term_sentiments.get(bg_str, 0.0)
+                category = get_sentiment_category(score, pos_threshold, neg_threshold)
+                bg_data.append([bg_str, f, score, category])
+        else:
+            bg_data = [[" ".join(bg), f] for bg, f in top_bg]
+        bg_cols = ["bigram", "count"] + (["sentiment", "category"] if enable_sentiment else [])
+        st.dataframe(pd.DataFrame(bg_data, columns=bg_cols), use_container_width=True)
+
     # NPMI
     st.subheader("🔬 Phrase Significance (NPMI)")
     df_npmi = calculate_npmi(scanner.global_bigrams, combined_counts, scanner.total_rows_processed)
     st.dataframe(df_npmi.head(top_n), use_container_width=True)
 
-# --- AI ANALYST ---
+# --- AI ANALYST (Restored Full Mode) ---
 if combined_counts and st.session_state['authenticated']:
     st.divider()
     st.subheader("🤖 AI Analyst")
@@ -1422,16 +1446,32 @@ if combined_counts and st.session_state['authenticated']:
     top_b = [" ".join(bg) for bg, c in scanner.global_bigrams.most_common(20)]
     ai_ctx = f"Top Words: {', '.join(top_u)}\nTop Bigrams: {', '.join(top_b)}"
     
-    if st.button("✨ Identify Key Themes"):
-        with st.status("Analyzing..."):
-            st.session_state["ai_response"] = call_llm_and_track_cost(
-                "You are a qualitative data analyst. Summarize key themes from these stats.",
-                ai_ctx, ai_config
-            )
-            st.rerun()
+    col_ai_1, col_ai_2 = st.columns(2)
+    
+    with col_ai_1:
+        st.markdown("**1. One-Click Theme Detection**")
+        if st.button("✨ Identify Key Themes", type="primary"):
+            with st.status("Analyzing..."):
+                st.session_state["ai_response"] = call_llm_and_track_cost(
+                    "You are a qualitative data analyst. Summarize key themes from these stats.",
+                    ai_ctx, ai_config
+                )
+                st.rerun()
+
+    with col_ai_2:
+        st.markdown("**2. Ask the Data**")
+        user_question = st.text_area("Ask a specific question:", height=100)
+        if st.button("Ask Question"):
+            if user_question.strip():
+                with st.status("Thinking..."):
+                    st.session_state["ai_response"] = call_llm_and_track_cost(
+                        "Answer based ONLY on provided stats.",
+                        f"Context: {ai_ctx}\nQuestion: {user_question}", ai_config
+                    )
+                    st.rerun()
 
     if st.session_state["ai_response"]:
         st.markdown(st.session_state["ai_response"])
 
 st.markdown("---")
-st.markdown("<div style='text-align: center;'>Signal Foundry v2.0</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center;'>Signal Foundry v2.1</div>", unsafe_allow_html=True)
