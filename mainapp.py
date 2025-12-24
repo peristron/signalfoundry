@@ -1,6 +1,6 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.1 - Full Legacy Feature Set + New NLP Engine)
-#  Features: Streaming, Sketches, Lemmatization, NER Lite, Time-Series, TF-IDF, Full Graphs, AI Chat
+#  Status: PRODUCTION (v2.2 - Maximum Integrity)
+#  Architecture: Hybrid Streaming + "Data Refinery" Utility
 #
 import io
 import os
@@ -864,6 +864,65 @@ def perform_bayesian_sentiment_analysis(counts: Counter, sentiments: Dict[str, f
         "x_axis": x, "pdf_y": y
     }
 
+def render_workflow_guide():
+    with st.expander("📘 Comprehensive App Guide: How to use this Tool", expanded=False):
+        st.markdown("""
+        ### 🌟 What is this?
+        This is an **Unstructured Data Intelligence Engine**. It takes "dirty," raw text (from logs, surveys, transcripts, or documents) and extracts mathematical structure, semantic meaning, and qualitative insights without requiring you to write code.
+
+        ---
+
+        ### 🚀 1. Choose Your Workflow
+
+        #### A. The "Direct Scan" (Standard)
+        *   **Best for:** PDFs, PowerPoints, Transcripts, or CSVs/JSON files.
+        *   **How:** 
+            1. Upload your files in the sidebar.
+            2. Review the **"Scan Configuration"** box that appears in the main area (select specific columns for CSVs, etc.).
+            3. Click the **"⚡ Start Scan"** button for each file.
+        *   **Result:** The app processes the file into a lightweight statistical "Sketch" and generates a "Quick View" Word Cloud. Once all files are scanned, the aggregate analysis appears below.
+
+        #### B. The "Deep Scan" (Large Datasets)
+        *   **Best for:** Massive text dumps (>200MB) where memory is a concern.
+        *   **How:** Same as above, but the engine uses **Streaming Mode**.
+        *   **Mechanism:** It reads the file in small chunks, extracts statistics, and immediately discards the raw text to save memory.
+        *   **Benefit:** This allows you to process datasets larger than your available RAM.
+
+        #### C. The "Enterprise" Workflow (Offline/Secure)
+        *   **Best for:** Massive datasets (10M+ rows) or sensitive data (PII) that cannot leave your secure server.
+        *   **How:** Use the **Harvester Script** (running locally) to generate a `.json` Sketch file containing only math/counts (no raw text). Upload that JSON here to visualize it.
+
+        ---
+
+        ### 🧠 2. Interpret the Analytics
+
+        #### 🕸️ Network Graph & Community Detection
+        *   **The Concept:** Maps how words connect. If "Battery" frequently appears near "Drain," a line connects them.
+        *   **Communities (Colors):** Nodes are colored by cluster. If distinct color groups appear, you have successfully separated different conversation topics (e.g., "Login Issues" vs. "Billing Issues").
+
+        #### 🔬 NPMI (Phrase Significance)
+        *   **The Problem:** Raw frequency often highlights boring pairs (e.g., "of the", "to be").
+        *   **The Solution:** NPMI (Normalized Pointwise Mutual Information) measures *surprise*. It highlights words that appear together *more often than random chance* (e.g., "Credit Card", "Customer Service"). High scores (>0.5) indicate strong semantic links.
+
+        #### 🔍 Bayesian Theme Discovery (Topic Modeling)
+        *   **LDA Model:** Best for long text (essays/reports). Assumes documents are a "smoothie" of mixed topics.
+        *   **NMF Model:** Best for short text (chats/tickets). Assumes documents fall into distinct, sharp "buckets."
+
+        #### ⚖️ Bayesian Sentiment Inference
+        *   **The Value:** Standard sentiment analysis gives you a raw score. This engine calculates a **Credible Interval** (e.g., "We are 95% confident the true positive rate is between 55% and 65%"). This protects you from making business decisions based on small sample sizes.
+
+        #### 👥 Entities & Trends (New!)
+        *   **Trends:** If your CSV has a date column, this shows how volume and key terms shift over time.
+        *   **Entities:** Heuristic detection of People and Organizations.
+        *   **Keyphrases (TF-IDF):** Scores words by how "Unique" they are to specific documents, filtering out generic noise.
+
+        ---
+
+        ### ⚡ 3. Utilities
+        *   **Data Refinery:** If you have a 500MB CSV that Excel refuses to open, use the Refinery. It cleans the text (removing HTML/Chat logs) and splits it into manageable, Excel-ready chunks.
+        *   **AI Analyst:** Uses an LLM (Grok/GPT) to read the *summary statistics* and write a qualitative report.
+        """)
+
 def render_use_cases():
     with st.expander("📖 Use-cases", expanded=False):
         st.markdown("""
@@ -886,21 +945,18 @@ def render_use_cases():
         #### 🛡️ Security & Privacy
         *   **The "Privacy Proxy":** Refining data locally before sending sanitized stats to LLMs.
         *   **Insider Threat:** Pattern matching on communication logs.
-        """)
-
-def render_guide():
-    with st.expander("📘 App Guide & Workflow", expanded=False):
-        st.markdown("""
-        ### 🚀 Workflows
-        1.  **Direct Scan:** Upload files, Configure (select Date/Category columns), Click Scan.
-        2.  **Deep Scan:** For massive files, the engine streams data to keep memory low.
         
-        ### 🧠 Analytics Explained
-        *   **Entities:** Extracts capitalized Names and Organizations (Heuristic-based).
-        *   **Trends:** If a Date column is selected, shows word volume over time.
-        *   **Keyphrases (TF-IDF):** Scores words by "Uniqueness" rather than just frequency.
-        *   **NPMI:** Finds words that *mathematically belong together* (e.g., "Artificial" + "Intelligence").
-        *   **Bayesian Sentiment:** Shows the *probability* of true sentiment, not just a raw average.
+        ---
+        #### 🎓 Education: LMS Discussion Forums
+        *Insights into what a group of students are discussing:*
+        *   Identifying the most common topics and themes students are talking about.
+        *   Surfacing frequently asked questions and recurring challenges.
+        *   Detecting sentiment trends (e.g., frustration, excitement, confusion) across the class.
+        *   Visualizing connections between concepts or issues using network graphs.
+        *   Highlighting emerging issues or "unknown unknowns" (e.g., a misunderstood assignment).
+        *   Comparing discussion dynamics before and after key events (e.g., exams).
+        *   Summarizing participation patterns (who is most/least active).
+        *   Providing instructors with actionable summaries for targeted intervention.
         """)
 
 def render_analyst_help():
@@ -978,7 +1034,7 @@ st.set_page_config(page_title="Signal Foundry", layout="wide")
 st.title("🧠 Signal Foundry: Unstructured Data Analytics")
 st.markdown("### *(or: data geiger counter~)*")
 
-render_guide()
+render_workflow_guide() # Calling restored full guide
 render_use_cases()
 analyzer, lemmatizer = setup_nlp_resources()
 
@@ -1044,10 +1100,10 @@ with st.sidebar:
     
     st.markdown("**Cleaning**")
     clean_conf = CleaningConfig(
-        remove_chat=st.checkbox("Remove Chat Artifacts", True, help="Strips metadata timestamps/usernames."),
+        remove_chat=st.checkbox("Remove Chat Artifacts", True, help="Strips metadata like timestamps, usernames (e.g., <@U1234>), and system messages from logs/transcripts to focus purely on the conversation content."),
         remove_html=st.checkbox("Remove HTML", True),
         remove_urls=st.checkbox("Remove URLs", True),
-        unescape=st.checkbox("Unescape HTML", True, help="Converts coded entities (e.g., &amp;) back into readable symbols (&).")
+        unescape=st.checkbox("Unescape HTML", True, help="Converts coded entities (e.g., &amp;, &quot;) back into readable symbols (&, \").")
     )
     
     st.markdown("**Processing**")
@@ -1199,6 +1255,7 @@ if all_inputs:
                 elif is_json:
                     rows_iter = read_rows_json(file_bytes, scan_settings["json_key"])
                 else:
+                    # Fallback raw line reader
                     rows_iter = read_rows_raw_lines(file_bytes)
                 
                 # Run
@@ -1291,37 +1348,52 @@ if combined_counts:
     
     if enable_sentiment and beta_dist:
         st.subheader("⚖️ Bayesian Sentiment Inference")
-        with st.expander("🧠 How to read this chart", expanded=False):
-            st.markdown("Shows the probability distribution of the 'True' sentiment, accounting for sample size uncertainty.")
+        with st.expander("🧠 How to read this chart (and why it matters)", expanded=False):
+            st.markdown("""
+            **The Problem:** Standard sentiment analysis gives you a single number (e.g., "52% Positive"). But is that 52% based on 5 tweets or 5 million? A single number hides that uncertainty.
+            
+            **The Solution:** This chart calculates the **Probability** of the true sentiment.
+            *   **The Curve (PDF):** Represents likelihood. The higher the peak, the more likely that specific sentiment score is the "truth."
+            *   **The Shape:** 
+                *   **Narrow & Tall:** We have lots of data. We are highly confident the sentiment is exactly here.
+                *   **Wide & Flat:** We don't have enough data. The true sentiment could be almost anything.
+            *   **The Green Zone (95% CI):** There is a 95% probability the "True" sentiment falls within this range. 
+            
+            **Decision Tip:** If the green zone is very wide (e.g., spanning 30% to 70%), **do not** make business decisions based on sentiment yet; you need more data.
+            """)
 
         bayes_result = perform_bayesian_sentiment_analysis(combined_counts, term_sentiments, pos_threshold, neg_threshold)
         if bayes_result:
             b_col1, b_col2 = st.columns([1, 2])
             with b_col1:
-                st.metric("Positive Words", f"{bayes_result['pos_count']:,}")
-                st.metric("Negative Words", f"{bayes_result['neg_count']:,}")
-                st.success(f"95% CI: {bayes_result['ci_low']:.1%} — {bayes_result['ci_high']:.1%}")
+                st.metric("Positive Words Observed", f"{bayes_result['pos_count']:,}")
+                st.metric("Negative Words Observed", f"{bayes_result['neg_count']:,}")
+                st.info(f"Mean Expected Positive Rate: **{bayes_result['mean_prob']:.1%}**")
+                st.success(f"95% Credible Interval:\n**{bayes_result['ci_low']:.1%} — {bayes_result['ci_high']:.1%}**")
             with b_col2:
                 fig_bayes, ax_bayes = plt.subplots(figsize=(8, 4))
-                ax_bayes.plot(bayes_result['x_axis'], bayes_result['pdf_y'], lw=2, color='blue')
+                ax_bayes.plot(bayes_result['x_axis'], bayes_result['pdf_y'], lw=2, color='blue', label='Posterior PDF')
                 ax_bayes.fill_between(bayes_result['x_axis'], 0, bayes_result['pdf_y'], 
                                     where=(bayes_result['x_axis'] > bayes_result['ci_low']) & (bayes_result['x_axis'] < bayes_result['ci_high']),
-                                    color='green', alpha=0.3)
+                                    color='green', alpha=0.3, label='95% Credible Interval')
+                ax_bayes.set_title("Bayesian Update of Sentiment Confidence", fontsize=10)
+                ax_bayes.legend()
+                ax_bayes.grid(True, alpha=0.2)
                 st.pyplot(fig_bayes)
                 plt.close(fig_bayes)
 
-    show_graph = proc_conf.compute_bigrams and scanner.global_bigrams and st.checkbox("🕸️ Show Network Graph", value=True)
+    show_graph = proc_conf.compute_bigrams and scanner.global_bigrams and st.checkbox("🕸️ Show Network Graph & Advanced Analytics", value=True)
     if show_graph:
         st.subheader("🔗 Network Graph")
-        with st.expander("🛠️ Graph Settings", expanded=False):
+        with st.expander("🛠️ Graph Settings & Physics", expanded=False):
             c1, c2, c3 = st.columns(3)
-            min_edge_weight = c1.slider("Min Link Freq", 2, 100, 2)
+            min_edge_weight = c1.slider("Min Link Frequency", 2, 100, 2)
             max_nodes_graph = c1.slider("Max Nodes", 10, 200, 80)
             repulsion_val = c2.slider("Repulsion", 100, 3000, 1000)
             edge_len_val = c2.slider("Edge Length", 50, 500, 250)
-            physics_enabled = c3.checkbox("Physics", True)
-            directed_graph = c3.checkbox("Directed", False)
-            color_mode = c3.radio("Color By", ["Topic", "Sentiment"], index=0)
+            physics_enabled = c3.checkbox("Enable Physics", True)
+            directed_graph = c3.checkbox("Directed Arrows", False)
+            color_mode = c3.radio("Color By:", ["Community (Topic)", "Sentiment"], index=0)
 
         G = nx.DiGraph() if directed_graph else nx.Graph()
         filtered_bigrams = {k: v for k, v in scanner.global_bigrams.items() if v >= min_edge_weight}
@@ -1332,13 +1404,18 @@ if combined_counts:
             try: deg_centrality = nx.degree_centrality(G)
             except: deg_centrality = {n: 1 for n in G.nodes()}
             community_map = {}
+            ai_cluster_info = ""
             
-            if color_mode == "Topic":
+            if color_mode == "Community (Topic)":
                 G_undir = G.to_undirected() if directed_graph else G
                 try:
                     communities = nx_comm.greedy_modularity_communities(G_undir)
+                    cluster_descriptions = []
                     for group_id, community in enumerate(communities):
+                        top_in_cluster = sorted(list(community), key=lambda x: combined_counts[x], reverse=True)[:5]
+                        cluster_descriptions.append(f"- Cluster {group_id+1}: {', '.join(top_in_cluster)}")
                         for node in community: community_map[node] = group_id
+                    ai_cluster_info = "\n".join(cluster_descriptions)
                 except: pass
 
             community_colors = ["#FF4B4B", "#4589ff", "#ffa421", "#3cdb82", "#8b46ff", "#ff4b9f", "#00c0f2"]
@@ -1350,7 +1427,7 @@ if combined_counts:
                     s = term_sentiments.get(node_id, 0)
                     if s >= pos_threshold: node_color = pos_color
                     elif s <= neg_threshold: node_color = neg_color
-                elif color_mode == "Topic":
+                elif color_mode == "Community (Topic)":
                     gid = community_map.get(node_id, 0)
                     node_color = community_colors[gid % len(community_colors)]
 
@@ -1361,21 +1438,30 @@ if combined_counts:
                 edges.append(Edge(source=source, target=target, width=width, color="#e0e0e0"))
             
             config = Config(width=1000, height=700, directed=directed_graph, physics=physics_enabled, physicsSettings={"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -abs(repulsion_val), "springLength": edge_len_val}})
-            st.info("Scroll to zoom.")
+            st.info("💡 **Navigation Tip:** Use the buttons in the **bottom-right** of the graph to Zoom & Pan.")
             agraph(nodes=nodes, edges=edges, config=config)
             
             # Graph Analytics Tabs (Restored)
-            tab_g1, tab_g2, tab_g3 = st.tabs(["Top Nodes", "Text Stats", "🔥 Heatmap"])
+            tab_g1, tab_g2, tab_g3, tab_g4 = st.tabs(["Basic Stats", "Top Nodes", "Text Stats", "🔥 Heatmap"])
             with tab_g1:
+                col_b1, col_b2, col_b3 = st.columns(3)
+                col_b1.metric("Nodes", G.number_of_nodes())
+                col_b2.metric("Edges", G.number_of_edges())
+                try: col_b3.metric("Density", f"{nx.density(G):.4f}")
+                except: pass
+            with tab_g2:
                 node_weights = {n: 0 for n in G.nodes()}
                 for u, v, data in G.edges(data=True):
                     w = data.get('weight', 1)
                     node_weights[u] += w
                     node_weights[v] += w
                 st.dataframe(pd.DataFrame(list(node_weights.items()), columns=["Node", "Weighted Degree"]).sort_values("Weighted Degree", ascending=False).head(50), use_container_width=True)
-            with tab_g2:
-                 st.metric("Graph Density", f"{nx.density(G):.4f}")
             with tab_g3:
+                 c1, c2, c3 = st.columns(3)
+                 c1.metric("Total Tokens", f"{text_stats['Total Tokens']:,}")
+                 c2.metric("Unique Vocab", f"{text_stats['Unique Vocabulary']:,}")
+                 c3.metric("Lexical Diversity", f"{text_stats['Lexical Diversity']}")
+            with tab_g4:
                 top_20 = [w for w, c in combined_counts.most_common(20)]
                 if len(top_20) > 1:
                     mat = np.zeros((len(top_20), len(top_20)))
@@ -1390,7 +1476,7 @@ if combined_counts:
 
     st.subheader("🔍 Bayesian Theme Discovery")
     if len(scanner.topic_docs) > 5 and DictVectorizer:
-        with st.spinner("Modeling..."):
+        with st.spinner(f"Running {topic_model_type} Topic Modeling..."):
             topics = perform_topic_modeling(scanner.topic_docs, n_topics, topic_model_type)
         if topics:
             cols = st.columns(len(topics))
@@ -1432,10 +1518,15 @@ if combined_counts:
         bg_cols = ["bigram", "count"] + (["sentiment", "category"] if enable_sentiment else [])
         st.dataframe(pd.DataFrame(bg_data, columns=bg_cols), use_container_width=True)
 
-    # NPMI
-    st.subheader("🔬 Phrase Significance (NPMI)")
-    df_npmi = calculate_npmi(scanner.global_bigrams, combined_counts, scanner.total_rows_processed)
-    st.dataframe(df_npmi.head(top_n), use_container_width=True)
+        # NPMI in Expander (Original Style)
+        with st.expander("🔬 Phrase Significance (NPMI Score)", expanded=False):
+            st.markdown("""
+            **NPMI (Normalized Pointwise Mutual Information)** finds words that *belong* together, rather than just words that appear often.
+            *   High Score (> 0.5): Strong association (e.g., "Artificial Intelligence").
+            *   Low Score (< 0.1): Random association (e.g., "of the").
+            """)
+            df_npmi = calculate_npmi(scanner.global_bigrams, combined_counts, scanner.total_rows_processed)
+            st.dataframe(df_npmi.head(top_n), use_container_width=True)
 
 # --- AI ANALYST (Restored Full Mode) ---
 if combined_counts and st.session_state['authenticated']:
@@ -1444,7 +1535,7 @@ if combined_counts and st.session_state['authenticated']:
     
     top_u = [w for w, c in combined_counts.most_common(50)]
     top_b = [" ".join(bg) for bg, c in scanner.global_bigrams.most_common(20)]
-    ai_ctx = f"Top Words: {', '.join(top_u)}\nTop Bigrams: {', '.join(top_b)}"
+    ai_ctx_str = f"Top Words: {', '.join(top_u)}\nTop Bigrams: {', '.join(top_b)}\nGraph Clusters: {locals().get('ai_cluster_info', 'N/A')}"
     
     col_ai_1, col_ai_2 = st.columns(2)
     
@@ -1452,26 +1543,35 @@ if combined_counts and st.session_state['authenticated']:
         st.markdown("**1. One-Click Theme Detection**")
         if st.button("✨ Identify Key Themes", type="primary"):
             with st.status("Analyzing..."):
-                st.session_state["ai_response"] = call_llm_and_track_cost(
-                    "You are a qualitative data analyst. Summarize key themes from these stats.",
-                    ai_ctx, ai_config
-                )
+                system_prompt = "You are a qualitative data analyst. Analyze the provided word frequency lists to identify 3 key themes, potential anomalies, and a summary of the subject matter."
+                user_prompt = f"Data Context:\n{ai_ctx_str}"
+                response = call_llm_and_track_cost(system_prompt, user_prompt, ai_config)
+                st.session_state["ai_response"] = response
                 st.rerun()
 
     with col_ai_2:
         st.markdown("**2. Ask the Data**")
-        user_question = st.text_area("Ask a specific question:", height=100)
+        user_question = st.text_area("Ask a specific question:", height=100, placeholder="e.g., 'What are the main complaints about pricing?'")
         if st.button("Ask Question"):
             if user_question.strip():
                 with st.status("Thinking..."):
-                    st.session_state["ai_response"] = call_llm_and_track_cost(
-                        "Answer based ONLY on provided stats.",
-                        f"Context: {ai_ctx}\nQuestion: {user_question}", ai_config
-                    )
+                    system_prompt = "You are an expert analyst. Answer the user's question based ONLY on the provided summary statistics (word counts and associations). If you cannot answer from the data, say so."
+                    user_prompt = f"Data Context:\n{ai_ctx_str}\n\nUser Question: {user_question}"
+                    response = call_llm_and_track_cost(system_prompt, user_prompt, ai_config)
+                    st.session_state["ai_response"] = f"**Q: {user_question}**\n\n{response}"
                     st.rerun()
+            else:
+                st.warning("Please enter a question.")
 
     if st.session_state["ai_response"]:
+        st.divider()
+        st.markdown("### 📋 AI Output")
         st.markdown(st.session_state["ai_response"])
 
 st.markdown("---")
-st.markdown("<div style='text-align: center;'>Signal Foundry v2.1</div>", unsafe_allow_html=True)
+st.markdown(
+    "<div style='text-align: center; color: #808080; font-size: 12px;'>"
+    "Open Source software licensed under the MIT License."
+    "</div>", 
+    unsafe_allow_html=True
+)
