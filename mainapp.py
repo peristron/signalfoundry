@@ -1,5 +1,5 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.2 - Maximum Integrity)
+#  Status: PRODUCTION (v2.3 - Full Persistence)
 #  Architecture: Hybrid Streaming + "Data Refinery" Utility
 #
 import io
@@ -231,7 +231,10 @@ class StreamScanner:
             "bigrams": serializable_bigrams,
             "topic_docs": [dict(c) for c in self.topic_docs],
             "limit_reached": self.limit_reached,
-            # Note: Temporal/Entities omitted in lightweight save to keep JSON size manageable
+            # Persistence for new features
+            "temporal_counts": {k: dict(v) for k, v in self.temporal_counts.items()},
+            "entity_counts": dict(self.entity_counts),
+            "doc_freqs": dict(self.doc_freqs)
         }
         return json.dumps(data)
 
@@ -239,16 +242,29 @@ class StreamScanner:
         try:
             data = json.loads(json_str)
             if not validate_sketch_data(data): return False
+            
             self.total_rows_processed = data.get("total_rows", 0)
             self.global_counts = Counter(data.get("counts", {}))
+            
             raw_bigrams = data.get("bigrams", {})
             self.global_bigrams = Counter()
             for k, v in raw_bigrams.items():
                 if "|" in k:
                     parts = k.split("|", 1)
                     self.global_bigrams[(parts[0], parts[1])] = v
+            
             self.topic_docs = [Counter(d) for d in data.get("topic_docs", [])]
             self.limit_reached = data.get("limit_reached", False)
+            
+            # Restore new features
+            self.entity_counts = Counter(data.get("entity_counts", {}))
+            self.doc_freqs = Counter(data.get("doc_freqs", {}))
+            
+            raw_temp = data.get("temporal_counts", {})
+            self.temporal_counts = defaultdict(Counter)
+            for k, v in raw_temp.items():
+                self.temporal_counts[k] = Counter(v)
+                
             return True
         except Exception as e:
             logger.error(f"JSON Load Error: {e}")
@@ -1437,7 +1453,7 @@ if combined_counts:
                 width = 1 + math.log(weight) * 0.8
                 edges.append(Edge(source=source, target=target, width=width, color="#e0e0e0"))
             
-            config = Config(width=1000, height=700, directed=directed_graph, physics=physics_enabled, physicsSettings={"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -abs(repulsion_val), "springLength": edge_len_val}})
+            config = Config(width=1000, height=700, directed=directed_graph, physics=physics_enabled, physicsSettings={"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -abs(repulsion_val), "springLength": edge_len_val, "springConstant": 0.05, "damping": 0.4}})
             st.info("💡 **Navigation Tip:** Use the buttons in the **bottom-right** of the graph to Zoom & Pan.")
             agraph(nodes=nodes, edges=edges, config=config)
             
