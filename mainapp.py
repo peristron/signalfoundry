@@ -1450,6 +1450,7 @@ scanner = st.session_state['sketch']
 combined_counts = Counter({
     k: v for k, v in scanner.global_counts.items() 
     if len(str(k)) >= proc_conf.min_word_len
+    and k not in proc_conf.stopwords # <--- New Logic
 })
 
 if combined_counts:
