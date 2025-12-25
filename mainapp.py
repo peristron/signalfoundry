@@ -940,7 +940,12 @@ def render_workflow_guide():
         """)
 
 def render_lit_case_study():
-    with st.expander("🔦 Spotlight: Digital Humanities & Literary Forensics (*another* **specific** Case Study)", expanded=False):
+    # We use Unicode "Math Sans" characters to simulate bold/italics in the title
+    # Italic 'another': 𝘢𝘯𝘰𝘵𝘩𝘦𝘳
+    # Bold 'specific': 𝘀𝗽𝗲𝗰𝗶𝗳𝗶𝗰
+    title = "🔦 Spotlight: Digital Humanities & Literary Forensics (𝘢𝘯𝘰𝘵𝘩𝘦𝘳 𝘀𝗽𝗲𝗰𝗶𝗳𝗶𝗰 Case Study)"
+    
+    with st.expander(title, expanded=False):
         st.markdown("""
         ### The Scenario
         **The Artifact:** The full text of Ovid's **<a href="https://www.gutenberg.org/files/21765/21765-h/21765-h.htm" target="_blank">"Metamorphoses"</a>** (via Project Gutenberg URL).
