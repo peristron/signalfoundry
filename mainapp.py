@@ -47,6 +47,11 @@ except ImportError:
     BeautifulSoup = None
 
 try:
+    import qrcode
+except ImportError:
+    qrcode = None
+
+try:
     from scipy.stats import beta as beta_dist
 except ImportError:
     beta_dist = None
