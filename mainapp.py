@@ -944,7 +944,7 @@ def render_workflow_guide():
         """)
 
 def render_neurotech_case_study():
-    with st.expander("🔦 Spotlight: Analyzing Military Neurotechnology (a very specific Case Study)", expanded=False):
+    with st.expander("🔦 Spotlight: Analyzing Military Neurotechnology (a very *specific* Case Study)", expanded=False):
         st.markdown("""
         ### The Scenario
         **The Artifact:** A dense, 50-page UNIDIR report titled <a href="https://unidir.org/wp-content/uploads/2025/11/UNIDIR_Neurotechnology_Military-Domain_A-Primer.pdf" target="_blank"><b>"Neurotechnology in the Military Domain"</b></a>.
