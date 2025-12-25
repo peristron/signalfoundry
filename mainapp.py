@@ -981,6 +981,47 @@ def render_lit_case_study():
         *   **The Value / Insight:** Visualizes the centralized power structure of the mythology, confirming Jupiter as the primary driver of the transformations.
         """, unsafe_allow_html=True)
 
+def render_auto_insights(scanner, proc_conf):
+    # Only run if we have data
+    if not scanner.global_counts: return
+
+    # --- 1. PREPARE DATA ---
+    # Entities
+    top_ents = scanner.entity_counts.most_common(3)
+    ent_str = ", ".join([f"**{e[0]}**" for e in top_ents]) if top_ents else "(No entities detected)"
+    
+    # Sticky Concepts (NPMI)
+    df_npmi = calculate_npmi(scanner.global_bigrams, scanner.global_counts, scanner.total_rows_processed)
+    top_npmi = df_npmi.head(3)["Bigram"].tolist() if not df_npmi.empty else []
+    npmi_str = ", ".join([f"**{b}**" for b in top_npmi]) if top_npmi else "(No strong phrases found)"
+    
+    # Tech Signal (TF-IDF)
+    df_tfidf = calculate_tfidf(scanner, 20)
+    top_idf = df_tfidf.head(3)["Term"].tolist() if not df_tfidf.empty else []
+    idf_str = ", ".join([f"**{t}**" for t in top_idf]) if top_idf else "(Not enough documents for TF-IDF)"
+
+    # -render reporting
+    with st.expander("⚡ High-Level Signal Report (Auto-Generated, ymmv)", expanded=True):
+        st.markdown(f"""
+        ### 1. The "Stakeholder Map" (Entities)
+        *   **The Question:** "Who are the dominant actors or organizations?"
+        *   **The Signal:** Capitalized Name Extraction.
+        *   **The Result:** {ent_str}
+        *   **The Insight:** These nodes appear most frequently, suggesting they are the primary drivers of the narrative or the key subjects of the file.
+
+        ### 2. The "Sticky Concepts" (Phrase Significance)
+        *   **The Question:** "What is the specific 'Term of Art' or jargon here?"
+        *   **The Signal:** NPMI (Normalized Pointwise Mutual Information).
+        *   **The Result:** {npmi_str}
+        *   **The Insight:** These words appear together mathematically more often than random chance, indicating they represent specific concepts (e.g. "Credit Card" vs "Red Card") rather than generic language.
+
+        ### 3. The "Technical Signal" (Keyphrases)
+        *   **The Question:** "What makes this specific document unique?"
+        *   **The Signal:** TF-IDF (Inverse Document Frequency).
+        *   **The Result:** {idf_str}
+        *   **The Insight:** While words like "the" or "report" might be frequent, *these* specific words are statistically unique to this dataset, representing its core technical signature.
+        """)
+
 def render_neurotech_case_study():
     with st.expander("🔦 Spotlight: Analyzing Mi|itary Neurotechno|ogy (a very *specific* Case Study)", expanded=False):
         st.markdown("""
