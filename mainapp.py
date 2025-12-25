@@ -940,7 +940,7 @@ def render_workflow_guide():
         """)
 
 def render_lit_case_study():
-    with st.expander("🔦 Spotlight: Digital Humanities & Literary Forensics (Case Study)", expanded=False):
+    with st.expander("🔦 Spotlight: Digital Humanities & Literary Forensics (8another specific* Case Study)", expanded=False):
         st.markdown("""
         ### The Scenario
         **The Artifact:** The full text of Ovid's **<a href="https://www.gutenberg.org/files/21765/21765-h/21765-h.htm" target="_blank">"Metamorphoses"</a>** (via Project Gutenberg URL).
