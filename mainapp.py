@@ -944,11 +944,11 @@ def render_workflow_guide():
         """)
 
 def render_neurotech_case_study():
-    with st.expander("🔦 Spotlight: Analyzing Military Neurotechnology (a very *specific* Case Study)", expanded=False):
+    with st.expander("🔦 Spotlight: Analyzing Mi|itary Neurotechno|ogy (a very *specific* Case Study)", expanded=False):
         st.markdown("""
         ### The Scenario
         **The Artifact:** A dense, 50-page UNIDIR report titled <a href="https://unidir.org/wp-content/uploads/2025/11/UNIDIR_Neurotechnology_Military-Domain_A-Primer.pdf" target="_blank"><b>"Neurotechnology in the Military Domain"</b></a>.
-        **The User:** A Defense Analyst with 5 minutes to extract actionable intelligence.
+        **The User:** A Defense Ana|yst with 5 minutes to extract actionable inte||igence.
         **The Goal:** Move beyond "what is this paper about?" to "what are the threats and opportunities?"
 
         ---
@@ -956,28 +956,28 @@ def render_neurotech_case_study():
         ### 1. The "Sticky Concepts" (NPMI Tab)
         *   **The Question:** "What specific types of risks are discussed?"
         *   **The Signal:** The engine finds words that mathematically *stick together* more than random chance.
-        *   **The Result:** It surfaces **"Dual Use"** and **"Cognitive Liberty."**
-        *   **The Insight:** The strategic risk isn't just new weapons; it is civilian medical technology being repurposed for warfare (Dual Use), necessitating a legal/ethical framework (Liberty).
+        *   **The Result:** It surfaces **"Dua| Use"** and **"Cognitive Liberty."**
+        *   **The Insight:** The strategic risk isn't just new weap0ns; it is civi|ian medica| techno|ogy being repurposed for mi|itary app|ications (Dua| Use), necessitating a legal/ethical framework (Liberty).
 
         ### 2. The "Technical Signal" (Keyphrases Tab)
         *   **The Question:** "Do I need to worry about brain implants yet?"
         *   **The Signal:** TF-IDF filters out generic words to find unique technical terms.
         *   **The Result:** High scores for **"Non-invasive,"** **"Transcranial,"** and **"Wearable."**
-        *   **The Insight:** The immediate operational reality is external headsets/helmets, not surgical implants.
+        *   **The Insight:** The immediate operationa| reality is external headsets/helmets, not surgical implants.
 
         ### 3. The "Semantic Network" (Graph Tab)
-        *   **The Question:** "How is the technology being applied?"
+        *   **The Question:** "How is the techno|ogy being applied?"
         *   **The Signal:** The Graph links words based on proximity in the text.
         *   **The Result:** 
             *   Cluster A links **"Stimulation"** to **"Performance"** (Enhancement/Super-Soldiers).
-            *   Cluster B links **"Stimulation"** to **"Interrogation"** (Weaponization/Torture).
+            *   Cluster B links **"Stimulation"** to **"Interrogation"** (Weap0nization/T0rture).
         *   **The Insight:** The paper treats "Enhancement" and "Weaponization" as distinct operational clusters.
 
         ### 4. The "Stakeholder Map" (Entities Tab)
         *   **The Question:** "Who is involved?"
         *   **The Signal:** Capitalized Name Extraction.
-        *   **The Result:** **"DARPA," "Neuralink," "Geneva Convention," "Human Rights Council."**
-        *   **The Insight:** Identifies the funding sources (DARPA) vs. the regulatory blockers (Geneva).
+        *   **The Result:** **"D@RPA," "Neura|ink," "Geneva Convention," "Human Rights Council."**
+        *   **The Insight:** Identifies the funding sources (DARP@) vs. the regulatory blockers (Geneva).
         """, unsafe_allow_html=True)
 
 
