@@ -1,5 +1,5 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.6 - Fixed NameError Bug)
+#  Status: PRODUCTION (v2.7 - Fixed NameError & Hardcoded Values)
 #  Architecture: Hybrid Streaming + "Data Refinery" Utility
 #
 import io
@@ -1148,7 +1148,7 @@ with st.sidebar:
     top_n = st.number_input("Top Terms to Display", min_value=5, max_value=1000, value=20)
     max_words = st.slider("Max Words (Cloud)", 50, 3000, 1000, 50)
     
-    # Font Selection (Restored)
+    # Font Selection (Explicitly Restored)
     font_map, font_names = list_system_fonts(), list(list_system_fonts().keys())
     combined_font_name = st.selectbox("Font", font_names or ["(default)"], 0)
     combined_font_path = font_map.get(combined_font_name) if font_names else None
