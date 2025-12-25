@@ -1459,7 +1459,14 @@ if combined_counts:
                     gid = community_map.get(node_id, 0)
                     node_color = community_colors[gid % len(community_colors)]
 
-                nodes.append(Node(id=node_id, label=node_id, size=size, color=node_color))
+                # re-added font config for white, legible text
+                nodes.append(Node(
+                    id=node_id, 
+                    label=node_id, 
+                    size=size, 
+                    color=node_color,
+                    font={'color': 'white', 'size': 20, 'strokeWidth': 2, 'strokeColor': '#000000'}
+                ))
 
             for (source, target), weight in sorted_connections:
                 width = 1 + math.log(weight) * 0.8
