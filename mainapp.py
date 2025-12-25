@@ -1,5 +1,5 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.7 - Fixed NameError & Hardcoded Values)
+#  Status: PRODUCTION (v2.8 - Cache Buster Edition)
 #  Architecture: Hybrid Streaming + "Data Refinery" Utility
 #
 import io
@@ -1047,6 +1047,7 @@ def call_llm_and_track_cost(system_prompt: str, user_prompt: str, config: dict):
 # ==========================================
 
 st.set_page_config(page_title="Signal Foundry", layout="wide")
+st.toast("v2.8 Loaded successfully", icon="🚀") # CACHE BUSTER TOAST
 st.title("🧠 Signal Foundry: Unstructured Data Analytics")
 st.markdown("### *(or: data geiger counter~)*")
 
