@@ -1172,12 +1172,15 @@ with st.sidebar:
     doc_granularity = st.select_slider("Rows per Doc", options=[1, 5, 10, 100, 500], value=5)
     st.session_state['sketch'].set_batch_size(doc_granularity)
     
-    if 'last_gran' not in st.session_state: st.session_state['last_gran'] = doc_granularity
-    if st.session_state['last_gran'] != doc_granularity:
+    current_settings_hash = f"{doc_granularity}_{proc_conf.min_word_len}"
+    if 'last_settings_hash' not in st.session_state: 
+        st.session_state['last_settings_hash'] = current_settings_hash
+
+    if st.session_state['last_settings_hash'] != current_settings_hash:
         if st.session_state['sketch'].total_rows_processed > 0:
             reset_sketch()
-            st.warning("Granularity changed. Data reset.")
-        st.session_state['last_gran'] = doc_granularity
+            st.warning("⚙️ Processing settings changed. Data has been reset to ensure consistency. Please Scan again.")
+        st.session_state['last_settings_hash'] = current_settings_hash
 
     topic_model_type = st.selectbox("Topic Model", ["LDA", "NMF"])
     n_topics = st.slider("Topics", 2, 10, 4)
