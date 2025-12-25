@@ -1183,7 +1183,7 @@ with st.sidebar:
     if st.session_state['last_settings_hash'] != current_settings_hash:
         if st.session_state['sketch'].total_rows_processed > 0:
             reset_sketch()
-            st.warning("⚙️ Processing settings changed. Data has been reset to ensure consistency. Please Scan again.")
+            st.warning("⚙️ Settings changed. Data reset for consistency. Please Scan again.")
         st.session_state['last_settings_hash'] = current_settings_hash
 
     topic_model_type = st.selectbox("Topic Model", ["LDA", "NMF"])
