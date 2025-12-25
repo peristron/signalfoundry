@@ -939,6 +939,43 @@ def render_workflow_guide():
         *   **The Value:** **Decision Safety**. Instead of saying "Sentiment is 60%," it says "We are 95% confident the true sentiment lies between 55% and 65%." This prevents knee-jerk reactions to statistically insignificant data.
         """)
 
+def render_lit_case_study():
+    with st.expander("🔦 Spotlight: Digital Humanities & Literary Forensics (Case Study)", expanded=False):
+        st.markdown("""
+        ### The Scenario
+        **The Artifact:** The full text of Ovid's **<a href="https://www.gutenberg.org/files/21765/21765-h/21765-h.htm" target="_blank">"Metamorphoses"</a>** (via Project Gutenberg URL).
+        **The User:** A Digital Humanities Researcher or Student.
+        **The Goal:** To rapidly map the "Pantheon" of characters and distinguish the original narrative from the translator's artifacts.
+
+        ---
+
+        ### 1. The "Pantheon Map" (Entities Tab)
+        *   **The Question:** "Who are the dominant power players in this 15-book epic?"
+        *   **The Signal:** Capitalized Name Extraction.
+        *   **The Result:** The engine immediately surfaces **"Jupiter," "Apollo," "Ceres,"** and **"Minerva"** as the top nodes.
+        *   **The Value / Insight:** Without reading a single line, you have a hierarchical map of the Roman deities driving the plot.
+
+        ### 2. The "Translator's Fingerprint" (NPMI & Bigrams)
+        *   **The Question:** "Is this pure text, or is there structural noise?"
+        *   **The Signal:** Sticky Concepts (Bigrams).
+        *   **The Result:** The engine identifies **"Clarke translates"** and **"-ver Clarke"** as top phrases.
+        *   **The Value / Insight:** **Forensic Separation.** The engine detected that *John Clarke* (the translator) is statistically inseparable from the text. It highlights "Data Hygiene" issues—showing you exactly what "boilerplate" needs to be cleaned (e.g., "Project Gutenberg" headers) before deep analysis.
+
+        ### 3. The "Narrative Arcs" (Topic Modeling)
+        *   **The Question:** "What are the distinct recurring themes?"
+        *   **The Signal:** NMF/LDA Mathematical Bucketing.
+        *   **The Result:**
+            *   **Topic A:** [Daughter, Jupiter, Cadmus, Wife] -> *The Genealogy & Origin Myths.*
+            *   **Topic B:** [Thou, Thee, Thus, Said] -> *The Dialogue & Poetic Structure.*
+        *   **The Value / Insight:** The engine successfully separates the *Style* (Archaic English) from the *Substance* (Mythological Events).
+
+        ### 4. The "Semantic Network" (Graph Tab)
+        *   **The Question:** "How do the gods interact?"
+        *   **The Signal:** Proximity-based linking.
+        *   **The Result:** "Jupiter" is the central "Hub" node, with spokes connecting to various "Nymphs" and "Daughters."
+        *   **The Value / Insight:** Visualizes the centralized power structure of the mythology, confirming Jupiter as the primary driver of the transformations.
+        """, unsafe_allow_html=True)
+
 def render_neurotech_case_study():
     with st.expander("🔦 Spotlight: Analyzing Mi|itary Neurotechno|ogy (a very *specific* Case Study)", expanded=False):
         st.markdown("""
