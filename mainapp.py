@@ -1143,7 +1143,7 @@ with st.sidebar:
     proc_conf.stopwords = stopwords
     
     st.markdown("### 🎨 Appearance")
-    bg_color = st.color_picker("Background Color", "#ffffff")
+    bg_color = st.color_picker("Background Color", "#000000")
     colormap = st.selectbox("Colormap", ["viridis", "plasma", "inferno", "magma", "cividis", "tab10", "Blues", "Reds", "Greys"], 0)
     top_n = st.number_input("Top Terms to Display", min_value=5, max_value=1000, value=20)
     max_words = st.slider("Max Words (Cloud)", 50, 3000, 1000, 50)
