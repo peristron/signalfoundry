@@ -1173,7 +1173,13 @@ with st.sidebar:
         with c2: neu_color = st.color_picker("neu color", value=neu_color)
         with c3: neg_color = st.color_picker("neg color", value=neg_color)
 
-    doc_granularity = st.select_slider("Rows per Doc", options=[1, 5, 10, 100, 500], value=5)
+    # Updated with help text
+    doc_granularity = st.select_slider(
+        "Rows per Doc", 
+        options=[1, 5, 10, 100, 500], 
+        value=5,
+        help="How many lines of text form one 'Document'. Use 1-5 for Chat Logs/Tweets. Use 100+ for Books/Reports."
+    )
     st.session_state['sketch'].set_batch_size(doc_granularity)
     
     current_settings_hash = f"{doc_granularity}_{proc_conf.min_word_len}"
@@ -1186,8 +1192,20 @@ with st.sidebar:
             st.warning("⚙️ Settings changed. Data reset for consistency. Please Scan again.")
         st.session_state['last_settings_hash'] = current_settings_hash
 
-    topic_model_type = st.selectbox("Topic Model", ["LDA", "NMF"])
-    n_topics = st.slider("Topics", 2, 10, 4)
+    # Updated with help text
+    topic_model_type = st.selectbox(
+        "Topic Model", 
+        ["LDA", "NMF"],
+        help="LDA: Best for long text with mixed topics (Probabilistic). NMF: Best for short text with distinct topics (Linear Algebra)."
+    )
+    
+    # Updated with help text
+    n_topics = st.slider(
+        "Topics", 
+        2, 10, 
+        4,
+        help="The number of distinct themes the AI should attempt to find."
+    )
 
 with st.expander("🛠️ Data Refinery"):
     ref_file = st.file_uploader("CSV to Refine", type=['csv'])
