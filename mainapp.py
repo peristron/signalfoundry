@@ -1472,7 +1472,17 @@ if combined_counts:
                 width = 1 + math.log(weight) * 0.8
                 edges.append(Edge(source=source, target=target, width=width, color="#e0e0e0"))
             
-            config = Config(width=1000, height=700, directed=directed_graph, physics=physics_enabled, physicsSettings={"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -abs(repulsion_val), "springLength": edge_len_val, "springConstant": 0.05, "damping": 0.4}})
+            # re-added interaction dict for zoom/pan buttons
+            config = Config(
+                width=1000, 
+                height=700, 
+                directed=directed_graph, 
+                physics=physics_enabled, 
+                hierarchy=False, 
+                interaction={"navigationButtons": True, "zoomView": True}, 
+                physicsSettings={"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -abs(repulsion_val), "springLength": edge_len_val, "springConstant": 0.05, "damping": 0.4}}
+            )
+            
             st.info("💡 **Navigation Tip:** Use the buttons in the **bottom-right** of the graph to Zoom & Pan.")
             agraph(nodes=nodes, edges=edges, config=config)
             
