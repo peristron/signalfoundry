@@ -944,10 +944,10 @@ def render_workflow_guide():
         """)
 
 def render_neurotech_case_study():
-    with st.expander("🔦 Spotlight: Analyzing Military Neurotechnology (a **Specific** Case Study)", expanded=False):
+    with st.expander("🔦 Spotlight: Analyzing Military Neurotechnology (a very specific Case Study)", expanded=False):
         st.markdown("""
         ### The Scenario
-        **The Artifact:** A dense, 50-page UNIDIR report titled **["Neurotechnology in the Military Domain"](https://unidir.org/wp-content/uploads/2025/11/UNIDIR_Neurotechnology_Military-Domain_A-Primer.pdf)**.
+        **The Artifact:** A dense, 50-page UNIDIR report titled <a href="https://unidir.org/wp-content/uploads/2025/11/UNIDIR_Neurotechnology_Military-Domain_A-Primer.pdf" target="_blank"><b>"Neurotechnology in the Military Domain"</b></a>.
         **The User:** A Defense Analyst with 5 minutes to extract actionable intelligence.
         **The Goal:** Move beyond "what is this paper about?" to "what are the threats and opportunities?"
 
@@ -978,7 +978,7 @@ def render_neurotech_case_study():
         *   **The Signal:** Capitalized Name Extraction.
         *   **The Result:** **"DARPA," "Neuralink," "Geneva Convention," "Human Rights Council."**
         *   **The Insight:** Identifies the funding sources (DARPA) vs. the regulatory blockers (Geneva).
-        """)
+        """, unsafe_allow_html=True)
 
 
 def render_use_cases():
