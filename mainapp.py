@@ -1129,7 +1129,8 @@ st.markdown("### *(or: data geiger counter~)*")
 
 render_workflow_guide() # calling restored full guide
 render_use_cases()
-render_neurotech_case_study() 
+render_neurotech_case_study()
+render_lit_case_study()
 analyzer, lemmatizer = setup_nlp_resources()
 
 # --- sidebar
