@@ -1,5 +1,5 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.5 - Fixed Font Path NameError)
+#  Status: PRODUCTION (v2.6 - Fixed NameError Bug)
 #  Architecture: Hybrid Streaming + "Data Refinery" Utility
 #
 import io
