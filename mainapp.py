@@ -917,7 +917,7 @@ def render_workflow_guide():
 
         ### 🧠 2. Interpret the Analytics
 
-        #### 📈 Trends & Entities (New!)
+        #### 📈 Trends & Entities
         *   **Temporal Trends:** See how specific words (e.g., "Error", "Happy") rise and fall over time. Requires a selected Date Column.
         *   **Entities:** The engine automatically detects Capitalized Names (People, Orgs) using heuristic matching.
         *   **Keyphrases (TF-IDF):** Highlights words that are *unique* to specific documents, ignoring generic fluff words.
@@ -939,7 +939,7 @@ def render_workflow_guide():
         ---
 
         ### ⚡ 3. Utilities
-        *   **Data Refinery:** If you have a 500MB CSV that Excel refuses to open, use the Refinery. It cleans the text (removing HTML/Chat logs) and splits it into manageable, Excel-ready chunks.
+        *   **Data Refinery:** If you have a ~500MB-1GB CSV that Excel refuses to open, use the Refinery. It cleans the text (removing HTML/Chat logs) and splits it into manageable, Excel-ready chunks.
         *   **AI Analyst:** Uses an LLM (Grok/GPT) to read the *summary statistics* and write a qualitative report.
         """)
 
