@@ -888,7 +888,8 @@ def render_workflow_guide():
     with st.expander("📘 Comprehensive App Guide: How to use this Tool", expanded=False):
         st.markdown("""
         ### 🌟 What is this?
-        This is an **Unstructured Data Intelligence Engine**. It takes "dirty," raw text (from logs, surveys, transcripts, or documents) and extracts mathematical structure, semantic meaning, and qualitative insights without requiring you to write code.
+        **Signal Foundry is an Unstructured Data Intelligence Engine (or: an "MRI for your documents").** 
+        It takes raw, "dirty" text and extracts mathematical structure **(Engineering View)** to reveal hidden risks, patterns, and causal links **(Value View)** without requiring you to write code.
 
         ---
 
@@ -898,49 +899,44 @@ def render_workflow_guide():
         *   **Best for:** PDFs, PowerPoints, Transcripts, or CSVs/JSON files.
         *   **How:** 
             1. Upload your files in the sidebar.
-            2. **Crucial Step:** A "Scan Configuration" box will appear for each file. 
-            3. **For Trends:** Select your **Date Column** in this box.
-            4. **For Segmentation:** Select your **Category Column** (e.g., "Department").
-            5. Click **"⚡ Start Scan"**.
-        *   **Result:** The app processes the file into a lightweight statistical "Sketch" and generates a "Quick View" Word Cloud.
+            2. **Crucial Step:** A "Scan Configuration" box will appear. 
+            3. **For Trends:** Select your **Date Column** (e.g., for logs or news).
+            4. Click **"⚡ Start Scan"**.
+        *   **Result:** A complete statistical "Sketch" of the document's DNA.
 
-        #### B. The "Deep Scan" (Large Datasets)
-        *   **Best for:** Massive text dumps (>200MB) where memory is a concern.
-        *   **How:** Same as above. The engine automatically switches to **Streaming Mode**.
-        *   **Mechanism:** It reads the file in small chunks, extracts statistics, and immediately discards the raw text to save memory.
-
-        #### C. The "Enterprise" Workflow (Offline/Secure)
-        *   **Best for:** Massive datasets (10M+ rows) or sensitive data (PII) that cannot leave your secure server.
-        *   **How:** Use the **Harvester Script** (running locally) to generate a `.json` Sketch file containing only math/counts (no raw text). Upload that JSON here to visualize it.
+        #### B. The "Enterprise" Workflow (Secure / Offline)
+        *   **Best for:** Massive datasets (>10M rows) or sensitive PII that cannot leave a secure server.
+        *   **How:** Use the offline `harvester.py` script to generate a `.json` Sketch file (containing only math/counts, no raw text). Upload that JSON here to visualize it safely.
 
         ---
 
-        ### 🧠 2. Interpret the Analytics
+        ### 🧠 2. Interpret the Analytics (The Foundry Process)
 
-        #### 📈 Trends & Entities
-        *   **Temporal Trends:** See how specific words (e.g., "Error", "Happy") rise and fall over time. Requires a selected Date Column.
-        *   **Entities:** The engine automatically detects Capitalized Names (People, Orgs) using heuristic matching.
-        *   **Keyphrases (TF-IDF):** Highlights words that are *unique* to specific documents, ignoring generic fluff words.
+        #### 📈 Technical Signal / Keyphrases (TF-IDF)
+        *   **The Tech:** Uses *Term Frequency-Inverse Document Frequency* to filter out generic high-frequency words (like "report", "therefore").
+        *   **The Value:** Isolates the **Unique Signal**. It answers: *"What is the specific jargon or technical topic unique to this file?"*
 
-        #### 🕸️ Network Graph & Community Detection
-        *   **The Concept:** Maps how words connect. If "Battery" frequently appears near "Drain," a line connects them.
-        *   **Communities (Colors):** Nodes are colored by cluster. Distinct colors usually indicate distinct conversation topics.
+        #### 🔬 Sticky Concepts / Phrase Significance (NPMI)
+        *   **The Tech:** Uses *Normalized Pointwise Mutual Information* to measure the mathematical probability of two words occurring together vs. random chance.
+        *   **The Value:** Reveals **Specific Risks**. It distinguishes generic "Data" from specific "Biometric Data" or "Dual Use." It finds the "terms of art."
 
-        #### 🔬 NPMI (Phrase Significance)
-        *   **The Solution:** NPMI measures *surprise*. It highlights words that appear together *more often than random chance* (e.g., "Credit Card" vs. "of the"). High scores (>0.5) indicate strong semantic links.
+        #### 👥 Stakeholder Map / Entities (NER Lite)
+        *   **The Tech:** Heuristic extraction of Capitalized Phrases.
+        *   **The Value:** Identifies **Who and What**. Quickly maps the Actors (Organizations, People) and Regulations cited in the text.
 
-        #### 🔍 Bayesian Theme Discovery (Topic Modeling)
-        *   **LDA Model:** Best for long text (essays/reports). Assumes documents are a "smoothie" of mixed topics.
-        *   **NMF Model:** Best for short text (chats/tickets). Assumes documents fall into distinct, sharp "buckets."
+        #### 🕸️ Context & Causality / Network Graph
+        *   **The Tech:** A force-directed graph connecting nodes based on physical proximity in the text.
+        *   **The Value:** Reveals **Hidden Associations**. If "Stimulation" links to "Therapy," the context is medical. If it links to "Interrogation," the context is weaponization.
 
-        #### ⚖️ Bayesian Sentiment Inference
-        *   **The Value:** Standard sentiment analysis gives you a raw score. This engine calculates a **Credible Interval** (e.g., "We are 95% confident the true positive rate is between 55% and 65%"). This protects you from making business decisions based on small sample sizes.
+        #### 🔍 Thematic Buckets / Topic Modeling
+        *   **The Tech:** Uses Matrix Factorization (NMF) or Probabilistic Models (LDA) to group words into vectors.
+        *   **The Value:** automated **Categorization**.
+            *   **LDA:** Best for long reports (mixed topics).
+            *   **NMF:** Best for short chats/tickets (distinct topics).
 
-        ---
-
-        ### ⚡ 3. Utilities
-        *   **Data Refinery:** If you have a ~500MB-1GB CSV that Excel refuses to open, use the Refinery. It cleans the text (removing HTML/Chat logs) and splits it into manageable, Excel-ready chunks.
-        *   **AI Analyst:** Uses an LLM (Grok/GPT) to read the *summary statistics* and write a qualitative report.
+        #### ⚖️ Risk Confidence / Bayesian Sentiment
+        *   **The Tech:** Calculates a *Credible Interval* using Beta Distributions rather than a single raw score.
+        *   **The Value:** **Decision Safety**. Instead of saying "Sentiment is 60%," it says "We are 95% confident the true sentiment lies between 55% and 65%." This prevents knee-jerk reactions to statistically insignificant data.
         """)
 
 def render_neurotech_case_study():
