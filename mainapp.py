@@ -1198,7 +1198,7 @@ with st.sidebar:
                 else:
                     st.error("Invalid Sketch File")
 
-        url_input = st.text_area("URLs (one per line)")
+        url_input = st.text_area("URLs (1 per line; doesn't always work with more modern sites)")
         manual_input = st.text_area("Manual Text")
         
     st.divider()
