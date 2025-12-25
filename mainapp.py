@@ -1458,7 +1458,7 @@ if combined_counts:
     
     # calculate stats upfront
     text_stats = calculate_text_stats(combined_counts, scanner.total_rows_processed)
-    
+    render_auto_insights(scanner, proc_conf)
     # main tabs
     tab_main, tab_trend, tab_ent, tab_key = st.tabs(["☁️ Word Cloud & Stats", "📈 Trends", "👥 Entities", "🔑 Keyphrases"])
     
