@@ -1150,6 +1150,10 @@ with st.sidebar:
     
     # font selection
     font_map, font_names = list_system_fonts(), list(list_system_fonts().keys())
+    default_font_idx = 0
+    desired_font = "DejaVu Sans Mono"
+    if desired_font in font_names:
+        default_font_idx = font_names.index(desired_font)
     combined_font_name = st.selectbox("Font", font_names or ["(default)"], 0)
     combined_font_path = font_map.get(combined_font_name) if font_names else None
 
