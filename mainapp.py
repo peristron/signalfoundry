@@ -975,9 +975,9 @@ def render_lit_case_study():
         *   **The Value / Insight:** The engine successfully separates the *Style* (Archaic English) from the *Substance* (Mythological Events).
 
         ### 4. The "Semantic Network" (Graph Tab)
-        *   **The Question:** "How do the gods interact?"
+        *   **The Question:** "How do the main characters interact?"
         *   **The Signal:** Proximity-based linking.
-        *   **The Result:** "Jupiter" is the central "Hub" node, with spokes connecting to various "Nymphs" and "Daughters."
+        *   **The Result:** "jupiter" is the central "hub" node, with spokes connecting to various "nymphs" and "daughters."
         *   **The Value / Insight:** Visualizes the centralized power structure of the mythology, confirming Jupiter as the primary driver of the transformations.
         """, unsafe_allow_html=True)
 
