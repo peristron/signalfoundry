@@ -1,6 +1,6 @@
-#  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.9 - Robust Graphics Safety)
-#  Architecture: Hybrid Streaming + "Data Refinery" Utility
+#  SIGNAL FOUNDRY (an UN-structured data intel engine)
+#  prod ready (v2.9 - robust graphics safety)
+#  arhitecture: hybrid streaming + "data refinery" utility
 #
 import io
 import os
@@ -38,7 +38,7 @@ import networkx as nx
 import networkx.algorithms.community as nx_comm
 from streamlit_agraph import agraph, Node, Edge, Config
 
-# --- Third Party Imports Checks
+# -3rd party imports checks
 try:
     import requests
     from bs4 import BeautifulSoup
@@ -83,9 +83,9 @@ except ImportError:
     SentimentIntensityAnalyzer = None
     WordNetLemmatizer = None
 
-# ==========================================
-# ⚙️ CONSTANTS & CONFIGURATION
-# ==========================================
+
+# ⚙️ constants and config
+# ========================================
 
 MAX_TOPIC_DOCS = 50_000
 MAX_SPEAKER_NAME_LENGTH = 30
@@ -95,7 +95,7 @@ PROGRESS_UPDATE_MIN_INTERVAL = 100
 NPMI_MIN_FREQ = 3
 MAX_FILE_SIZE_MB = 200
 
-# Regex Patterns
+# regex patterns
 HTML_TAG_RE = re.compile(r"<[^>]+>")
 CHAT_ARTIFACT_RE = re.compile(
     r":\w+:"
@@ -110,23 +110,22 @@ URL_EMAIL_RE = re.compile(
     r'|(?:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
     flags=re.IGNORECASE
 )
-# NER Lite Pattern (Capitalized words in sequence)
+# NER lite pattern (capitalized words in sequence)
 NER_CAPS_RE = re.compile(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b')
 
-# Logger Setup
+# logger setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("IntelEngine")
 
-# Custom Exceptions
+# custom exceptions
 class ReaderError(Exception):
     pass
 
 class ValidationError(Exception):
     pass
 
-# ==========================================
-# 📦 DATACLASSES
-# ==========================================
+# 📦 dataclassed
+# ===========================================
 
 @dataclass
 class CleaningConfig:
@@ -145,8 +144,8 @@ class ProcessingConfig:
     translate_map: Dict[int, Optional[int]] = field(default_factory=dict)
     stopwords: Set[str] = field(default_factory=set)
 
-# ==========================================
-# 🛡️ SECURITY & VALIDATION UTILS
+
+# 🛡️ security and validation utils
 # ==========================================
 
 def get_auth_password() -> str:
@@ -173,9 +172,9 @@ def validate_sketch_data(data: Dict) -> bool:
     if not REQUIRED_KEYS.issubset(data.keys()): return False
     return True
 
-# ==========================================
-# 🧠 CORE LOGIC (SCANNER)
-# ==========================================
+
+# 🧠 core logic, scanner
+# =========================================
 
 class StreamScanner:
     def __init__(self, doc_batch_size=5):
@@ -184,11 +183,11 @@ class StreamScanner:
         self.total_rows_processed = 0
         self.topic_docs: List[Counter] = []
         
-        # New Analytical Structures (v2.0)
+        # newer analytical structures (v2.0+)
         self.temporal_counts = defaultdict(Counter) # { '2023-10-01': {'word': 5} }
         self.category_counts = defaultdict(Counter) # { 'CategoryA': {'word': 10} }
         self.doc_freqs = Counter() # DF for TF-IDF
-        self.entity_counts = Counter() # NER Lite storage
+        self.entity_counts = Counter() # NER lite storage
         
         self.DOC_BATCH_SIZE = doc_batch_size
         self.limit_reached = False
@@ -203,7 +202,7 @@ class StreamScanner:
 
     def add_topic_sample(self, doc_counts: Counter):
         if not doc_counts: return
-        # Update Document Frequency (presence check) for TF-IDF
+        # update document frequency (presence check) for TF-IDF
         self.doc_freqs.update(doc_counts.keys())
         
         if self.limit_reached: return
@@ -223,7 +222,7 @@ class StreamScanner:
             self.entity_counts.update(entities)
 
     def to_json(self) -> str:
-        # We simplify complex structures for JSON serialization
+        # simplifying complex structures for JSON serialization
         serializable_bigrams = {f"{k[0]}|{k[1]}": v for k, v in self.global_bigrams.items()}
         data = {
             "total_rows": self.total_rows_processed,
@@ -256,7 +255,7 @@ class StreamScanner:
             self.topic_docs = [Counter(d) for d in data.get("topic_docs", [])]
             self.limit_reached = data.get("limit_reached", False)
             
-            # Restore new features
+            # new
             self.entity_counts = Counter(data.get("entity_counts", {}))
             self.doc_freqs = Counter(data.get("doc_freqs", {}))
             
@@ -270,7 +269,7 @@ class StreamScanner:
             logger.error(f"JSON Load Error: {e}")
             return False
 
-# Session State Init
+# session state init
 if 'sketch' not in st.session_state: st.session_state['sketch'] = StreamScanner()
 if 'total_cost' not in st.session_state: st.session_state['total_cost'] = 0.0
 if 'total_tokens' not in st.session_state: st.session_state['total_tokens'] = 0
@@ -301,9 +300,9 @@ def logout():
     st.session_state['authenticated'] = False
     st.session_state['ai_response'] = ""
 
-# ==========================================
-# 🛠️ HELPERS & SETUP
-# ==========================================
+
+# 🛠️ helpers, setup
+# ============================================
 
 @st.cache_resource(show_spinner="Init NLTK...")
 def setup_nlp_resources():
@@ -374,17 +373,17 @@ def make_unique_header(raw_names: List[Optional[str]]) -> List[str]:
     return result
 
 def extract_entities_regex(text: str, stopwords: Set[str]) -> List[str]:
-    # A lightweight NER without heavy models
+    # lightweight NER without heavy models
     candidates = NER_CAPS_RE.findall(text)
     valid = []
     for c in candidates:
-        # Filter out if it's just a common stopword capitalized at start of sentence
+        # filter out if it's just a common stopword capitalized at start of sentence
         if c.lower() in stopwords: continue
         if len(c) < 3: continue
         valid.append(c)
     return valid
 
-# --- VIRTUAL FILES & WEB ---
+# --- virtual files and web/url
 class VirtualFile:
     def __init__(self, name: str, text_content: str):
         self.name = name
@@ -409,11 +408,11 @@ def fetch_url_content(url: str) -> Optional[str]:
         return soup.get_text(separator=' ', strip=True)
     except Exception: return None
 
-# ==========================================
-# 📄 FILE READERS (Tuple Yielding)
+
+# 📄 file readers (tuple yielding)
 # ==========================================
 
-# NOTE: All Readers now yield (text_content, date_str, category_str)
+# all readers yield (text_content, date_str, category_str)
 
 def read_rows_raw_lines(file_bytes: bytes, encoding_choice: str = "auto") -> Iterable[Tuple[str, None, None]]:
     def _iter(enc):
@@ -427,7 +426,7 @@ def read_rows_raw_lines(file_bytes: bytes, encoding_choice: str = "auto") -> Ite
         yield ("", None, None)
 
 def read_rows_vtt(file_bytes: bytes, encoding_choice: str = "auto") -> Iterable[Tuple[str, None, None]]:
-    # Robust VTT reader that yields tuples
+    # robust VTT reader that yields tuples
     def _iter_lines(enc):
         bio = io.BytesIO(file_bytes)
         with io.TextIOWrapper(bio, encoding=enc, errors="replace", newline=None) as wrapper:
@@ -514,13 +513,13 @@ def read_rows_csv_structured(
             date_idx = name_to_idx.get(date_col) if date_col else None
             cat_idx = name_to_idx.get(cat_col) if cat_col else None
         else:
-            # If no header, user likely selected "col_0", "col_1" etc.
+            # if no header, user likely selected "col_0", "col_1" etc.
             name_to_idx = {f"col_{i}": i for i in range(len(first))}
             text_idxs = [name_to_idx[n] for n in text_cols if n in name_to_idx]
             date_idx = name_to_idx.get(date_col) if date_col else None
             cat_idx = name_to_idx.get(cat_col) if cat_col else None
             
-            # Yield first row data
+            # yield 1st row data
             txt_parts = [first[i] if i < len(first) else "" for i in text_idxs]
             d_val = first[date_idx] if (date_idx is not None and date_idx < len(first)) else None
             c_val = first[cat_idx] if (cat_idx is not None and cat_idx < len(first)) else None
@@ -552,7 +551,7 @@ def iter_excel_structured(
         wb.close()
         return
 
-    # Header Logic
+    # header logic
     if has_header:
         header = make_unique_header(list(first))
         name_to_idx = {n: i for i, n in enumerate(header)}
@@ -625,22 +624,22 @@ def excel_estimate_rows(file_bytes: bytes, sheet_name: str, has_header: bool) ->
     if has_header and total > 0: total -= 1
     return max(total, 0)
 
-# ==========================================
-# ⚙️ PROCESSING LOGIC
+
+# ⚙️ processing logic
 # ==========================================
 
 def clean_date_str(raw: Any) -> Optional[str]:
     """Tries to extract a YYYY-MM-DD string from raw input."""
     if not raw: return None
     s = str(raw).strip()
-    # Lightweight heuristics for ISO-like dates or standard formats
-    # 1. Match YYYY-MM-DD
+    # somelightweight heuristics for ISO-like dates or standard formats
+    # match YYYY-MM-DD
     match = re.search(r'\d{4}-\d{2}-\d{2}', s)
     if match: return match.group(0)
-    # 2. Match MM/DD/YYYY
+    # match MM/DD/YYYY
     match_us = re.search(r'(\d{1,2})/(\d{1,2})/(\d{4})', s)
     if match_us:
-        # Convert to ISO for sorting
+        # convert to ISO for sorting
         m, d, y = match_us.groups()
         return f"{y}-{int(m):02d}-{int(d):02d}"
     return None
@@ -678,21 +677,21 @@ def process_chunk_iter(
     batch_rows = 0
     row_count = 0
     
-    # Pre-caching lemmatizer methods for speed loop
+    # pre-caching lemmatizer methods for speed loop
     lemmatize = lemmatizer.lemmatize if _lemma else None
 
     for (raw_text, date_val, cat_val) in rows_iter:
         row_count += 1
         
-        # 1. Entities (Before lowercase)
+        # entities (Before lowercase)
         if raw_text:
             entities = extract_entities_regex(raw_text, _stopwords)
             scanner.update_entities(entities)
 
-        # 2. Cleaning
+        # cleaning
         text = apply_text_cleaning(raw_text, clean_conf)
         
-        # 3. Tokenization & Filter
+        # tokenization & filter
         filtered_tokens_line: List[str] = []
         for t in text.split():
             t = t.translate(_trans)
@@ -700,9 +699,9 @@ def process_chunk_iter(
             if _drop_int and t.isdigit(): continue
             if len(t) < _min_len: continue
             
-            # Lemmatize?
+            # lemmatize?
             if _lemma:
-                # Naive lemmatization (Verb first, then Noun) covers most bases without full POS tagging overhead
+                # naive lemmatization (check if verb first, then noun) covers most bases without full part-of-speech tagging overhead
                 t = lemmatize(t, pos='v')
                 t = lemmatize(t, pos='n')
             
@@ -717,12 +716,12 @@ def process_chunk_iter(
             if proc_conf.compute_bigrams and len(filtered_tokens_line) > 1:
                 local_global_bigrams.update(pairwise(filtered_tokens_line))
             
-            # Metadata Update
+            # metadata update
             clean_date = clean_date_str(date_val)
             clean_cat = str(cat_val).strip() if cat_val else None
             scanner.update_metadata_stats(clean_date, clean_cat, filtered_tokens_line)
 
-            # Topic Modeling Batching
+            # topic modeling batching
             batch_accum.update(line_counts)
             batch_rows += 1
             if batch_rows >= scanner.DOC_BATCH_SIZE:
@@ -732,7 +731,7 @@ def process_chunk_iter(
 
         if progress_cb and (row_count % 2000 == 0): progress_cb(row_count)
 
-    # Flush last batch
+    # flushing last batch
     if batch_accum and batch_rows > 0:
         scanner.add_topic_sample(batch_accum)
 
@@ -777,8 +776,8 @@ def perform_refinery_job(file_obj, chunk_size, clean_conf: CleaningConfig):
             st.error(f"Refinery Error: {str(e)}")
             return None
 
-# ==========================================
-# 📊 UI & ANALYTICS RENDERERS
+
+# 📊 UI, analytics renderers
 # ==========================================
 
 def calculate_text_stats(counts: Counter, total_rows: int) -> Dict:
@@ -815,8 +814,8 @@ def calculate_npmi(bigram_counts: Counter, unigram_counts: Counter, total_words:
     return df.sort_values("NPMI", ascending=False)
 
 def calculate_tfidf(scanner: StreamScanner, top_n=50) -> pd.DataFrame:
-    # IDF = log(Total Docs / Doc Freq)
-    # TF (Global) = Total Count / Total Words (simplified for sketch)
+    # IDF = log(total docs / doc freq)
+    # TF (Global) = total count / total words (simplified for sketch)
     total_docs = len(scanner.topic_docs)
     if total_docs == 0: return pd.DataFrame()
     
@@ -985,7 +984,7 @@ def render_analyst_help():
         *   **Fix:** Increase 'Min Link Frequency'.
         """)
 
-# Visualization Helpers
+# visualization helpers
 @st.cache_data(show_spinner="Analyzing term sentiment...")
 def get_sentiments(_analyzer, terms: Tuple[str, ...]) -> Dict[str, float]:
     if not _analyzer or not terms: return {}
@@ -1018,7 +1017,7 @@ def fig_to_png_bytes(fig):
     buf.seek(0)
     return buf
 
-# 🤖 AI Logic
+# 🤖 AI logic
 def call_llm_and_track_cost(system_prompt: str, user_prompt: str, config: dict):
     try:
         client = openai.OpenAI(api_key=config['api_key'], base_url=config['base_url'])
@@ -1042,20 +1041,20 @@ def call_llm_and_track_cost(system_prompt: str, user_prompt: str, config: dict):
     except Exception as e:
         return f"AI Error: {str(e)}"
 
-# ==========================================
-# 🚀 MAIN APP UI
+
+# 🚀 main app ui
 # ==========================================
 
 st.set_page_config(page_title="Signal Foundry", layout="wide")
-st.toast("v2.9 Loaded successfully", icon="🚀") # CACHE BUSTER TOAST
+st.toast("app loaded successfully", icon="🚀") # cache buster
 st.title("🧠 Signal Foundry: Unstructured Data Analytics")
 st.markdown("### *(or: data geiger counter~)*")
 
-render_workflow_guide() # Calling restored full guide
+render_workflow_guide() # calling restored full guide
 render_use_cases()
 analyzer, lemmatizer = setup_nlp_resources()
 
-# --- SIDEBAR ---
+# --- sidebar
 with st.sidebar:
     st.header("📂 Data Input")
     uploaded_files = st.file_uploader("Upload Files", type=["csv", "xlsx", "vtt", "txt", "json", "pdf", "pptx"], accept_multiple_files=True)
@@ -1135,8 +1134,8 @@ with st.sidebar:
         translate_map=build_punct_translation(st.checkbox("Keep Hyphens"), st.checkbox("Keep Apostrophes"))
     )
     
-    # Stopwords
-    user_sw = st.text_area("Stopwords (comma-separated)", "firstname.lastname, jane doe")
+    # stopwords
+    user_sw = st.text_area("Stopwords (comma-separated)", "firstname.lastname, jane doe, okay, ok, really")
     phrases, singles = parse_user_stopwords(user_sw)
     clean_conf.phrase_pattern = build_phrase_pattern(phrases)
     stopwords = set(STOPWORDS).union(singles)
@@ -1149,7 +1148,7 @@ with st.sidebar:
     top_n = st.number_input("Top Terms to Display", min_value=5, max_value=1000, value=20)
     max_words = st.slider("Max Words (Cloud)", 50, 3000, 1000, 50)
     
-    # Font Selection (Explicitly Restored)
+    # font selection
     font_map, font_names = list_system_fonts(), list(list_system_fonts().keys())
     combined_font_name = st.selectbox("Font", font_names or ["(default)"], 0)
     combined_font_path = font_map.get(combined_font_name) if font_names else None
@@ -1189,7 +1188,7 @@ with st.expander("🛠️ Data Refinery"):
         zip_data = perform_refinery_job(ref_file, 50000, clean_conf)
         if zip_data: st.download_button("Download ZIP", zip_data, "refined.zip", "application/zip")
 
-# --- SCANNING PHASE ---
+# --scanning phase
 all_inputs = list(uploaded_files) if uploaded_files else []
 if url_input:
     for u in url_input.split('\n'):
@@ -1205,7 +1204,7 @@ if all_inputs:
     
     for idx, f in enumerate(all_inputs):
         try:
-            # Resource Limit Check
+            # resource limit check
             if f.getbuffer().nbytes > MAX_FILE_SIZE_MB * 1024 * 1024:
                 st.error(f"❌ File **{f.name}** exceeds {MAX_FILE_SIZE_MB}MB limit.")
                 continue
@@ -1255,7 +1254,7 @@ if all_inputs:
                 bar = st.progress(0)
                 status = st.empty()
                 
-                # Select Iterator
+                # select iterator
                 rows_iter = iter([])
                 approx = estimate_row_count_from_bytes(file_bytes)
 
@@ -1278,10 +1277,10 @@ if all_inputs:
                 elif is_json:
                     rows_iter = read_rows_json(file_bytes, scan_settings["json_key"])
                 else:
-                    # Fallback raw line reader
+                    # fallback raw line reader
                     rows_iter = read_rows_raw_lines(file_bytes)
                 
-                # Run
+                # run
                 process_chunk_iter(rows_iter, clean_conf, proc_conf, st.session_state['sketch'], lemmatizer, lambda n: status.text(f"Rows: {n:,}"))
                 bar.progress(100)
                 status.success("Done!")
@@ -1290,7 +1289,7 @@ if all_inputs:
         except Exception as e:
             st.error(f"Error: {e}")
 
-# --- ANALYSIS PHASE ---
+# --- analysis phase
 scanner = st.session_state['sketch']
 combined_counts = scanner.global_counts
 
@@ -1298,10 +1297,10 @@ if combined_counts:
     st.divider()
     st.header("📊 Analysis Dashboard")
     
-    # Calculate stats upfront
+    # calculate stats upfront
     text_stats = calculate_text_stats(combined_counts, scanner.total_rows_processed)
     
-    # 1. Main Tabs
+    # main tabs
     tab_main, tab_trend, tab_ent, tab_key = st.tabs(["☁️ Word Cloud & Stats", "📈 Trends", "👥 Entities", "🔑 Keyphrases"])
     
     with tab_main:
@@ -1355,7 +1354,7 @@ if combined_counts:
             ent_df = pd.DataFrame(scanner.entity_counts.most_common(50), columns=["Entity", "Count"])
             st.dataframe(ent_df, use_container_width=True)
             
-            # Simple Entity Cloud (Safety Wrapped)
+            # simple entity cloud (safety wrapped)
             try:
                 fig_e, _ = build_wordcloud_figure_from_counts(scanner.entity_counts, 100, 800, 400, "#111111", "Pastel1", combined_font_path, 42, None)
                 st.pyplot(fig_e)
@@ -1372,7 +1371,7 @@ if combined_counts:
 
     st.divider()
     
-    # 2. Advanced Sections
+    # advanced sections
     
     if enable_sentiment and beta_dist:
         st.subheader("⚖️ Bayesian Sentiment Inference")
@@ -1486,7 +1485,7 @@ if combined_counts:
             st.info("💡 **Navigation Tip:** Use the buttons in the **bottom-right** of the graph to Zoom & Pan.")
             agraph(nodes=nodes, edges=edges, config=config)
             
-            # Graph Analytics Tabs (Restored)
+            # graph analytics tabs
             tab_g1, tab_g2, tab_g3, tab_g4 = st.tabs(["Basic Stats", "Top Nodes", "Text Stats", "🔥 Heatmap"])
             with tab_g1:
                 col_b1, col_b2, col_b3 = st.columns(3)
@@ -1532,7 +1531,7 @@ if combined_counts:
     else:
         st.info("Needs more data/docs to model topics.")
 
-    # Restored Detailed Frequency Tables
+    # detailed frequency tables
     st.divider()
     st.subheader(f"📊 Frequency Tables (Top {top_n})")
     most_common = combined_counts.most_common(top_n)
@@ -1563,7 +1562,7 @@ if combined_counts:
         bg_cols = ["bigram", "count"] + (["sentiment", "category"] if enable_sentiment else [])
         st.dataframe(pd.DataFrame(bg_data, columns=bg_cols), use_container_width=True)
 
-        # NPMI in Expander (Original Style)
+        # NPMI in expander (original style)
         with st.expander("🔬 Phrase Significance (NPMI Score)", expanded=False):
             st.markdown("""
             **NPMI (Normalized Pointwise Mutual Information)** finds words that *belong* together, rather than just words that appear often.
@@ -1573,7 +1572,7 @@ if combined_counts:
             df_npmi = calculate_npmi(scanner.global_bigrams, combined_counts, scanner.total_rows_processed)
             st.dataframe(df_npmi.head(top_n), use_container_width=True)
 
-# --- AI ANALYST (Restored Full Mode) ---
+# --- AI analyst (restored full mode)
 if combined_counts and st.session_state['authenticated']:
     st.divider()
     st.subheader("🤖 AI Analyst")
