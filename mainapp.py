@@ -1290,8 +1290,17 @@ if all_inputs:
             st.error(f"Error: {e}")
 
 # --- analysis phase
+
 scanner = st.session_state['sketch']
-combined_counts = scanner.global_counts
+
+# now: dynamic filtering
+# filter the view based on the CURRENT slider setting. 
+# ensures that if user changes the slider from 2 to 7, the 
+# wordcloud updates immediately without needing to re-scan the files
+combined_counts = Counter({
+    k: v for k, v in scanner.global_counts.items() 
+    if len(str(k)) >= proc_conf.min_word_len
+})
 
 if combined_counts:
     st.divider()
