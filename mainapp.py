@@ -943,42 +943,6 @@ def render_workflow_guide():
         *   **AI Analyst:** Uses an LLM (Grok/GPT) to read the *summary statistics* and write a qualitative report.
         """)
 
-def render_use_cases():
-    with st.expander("📖 Use-cases", expanded=False):
-        st.markdown("""
-        ### (Some) use-cases for this unstructured data intelligence engine
-        
-        #### 📈 Temporal & Trends
-        *   **Crisis Timeline:** Map high-severity words (e.g., "leak", "fail") over time to pinpoint incident starts.
-        *   **Campaign Tracking:** Watch how slogan adoption grows or fades week-over-week.
-        
-        #### 🏢 Corporate & Strategic
-        *   **Stakeholder Mapping (NER):** Instantly see *Who* and *What* are driving the conversation.
-        *   **Customer Feedback:** "Diffing" analysis to see what Engineering words are distinct from Sales words.
-        *   **M&A Due Diligence:** Scanning Data Rooms for liability terms without reading files.
-
-        #### 🔬 Research & Forensics
-        *   **Signal vs Noise:** TF-IDF extraction to ignore frequent words and find unique cluster identifiers.
-        *   **Literary Forensics:** Vocabulary diversity and phrase patterns.
-        *   **Unknown Unknowns:** Surface recurring challenges via bigram maps.
-
-        #### 🛡️ Security & Privacy
-        *   **The "Privacy Proxy":** Refining data locally before sending sanitized stats to LLMs.
-        *   **Insider Threat:** Pattern matching on communication logs.
-        
-        ---
-        #### 🎓 Education: LMS Discussion Forums
-        *Insights into what a group of students are discussing:*
-        *   Identifying the most common topics and themes students are talking about.
-        *   Surfacing frequently asked questions and recurring challenges.
-        *   Detecting sentiment trends (e.g., frustration, excitement, confusion) across the class.
-        *   Visualizing connections between concepts or issues using network graphs.
-        *   Highlighting emerging issues or "unknown unknowns" (e.g., a misunderstood assignment).
-        *   Comparing discussion dynamics before and after key events (e.g., exams).
-        *   Summarizing participation patterns (who is most/least active).
-        *   Providing instructors with actionable summaries for targeted intervention.
-        """)
-
 def render_neurotech_case_study():
     with st.expander("🔦 Spotlight: Analyzing Military Neurotechnology (a **Specific** Case Study)", expanded=False):
         st.markdown("""
@@ -1015,6 +979,44 @@ def render_neurotech_case_study():
         *   **The Result:** **"DARPA," "Neuralink," "Geneva Convention," "Human Rights Council."**
         *   **The Insight:** Identifies the funding sources (DARPA) vs. the regulatory blockers (Geneva).
         """)
+
+
+def render_use_cases():
+    with st.expander("📖 (some more general) Use-cases", expanded=False):
+        st.markdown("""
+        ### (Some) use-cases for this unstructured data intelligence engine; you'll think of more...
+        
+        #### 📈 Temporal & Trends
+        *   **Crisis Timeline:** Map high-severity words (e.g., "leak", "fail") over time to pinpoint incident starts.
+        *   **Campaign Tracking:** Watch how slogan adoption grows or fades week-over-week.
+        
+        #### 🏢 Corporate & Strategic
+        *   **Stakeholder Mapping (NER):** Instantly see *Who* and *What* are driving the conversation.
+        *   **Customer Feedback:** "Diffing" analysis to see what Engineering words are distinct from Sales words.
+        *   **M&A Due Diligence:** Scanning Data Rooms for liability terms without reading files.
+
+        #### 🔬 Research & Forensics
+        *   **Signal vs Noise:** TF-IDF extraction to ignore frequent words and find unique cluster identifiers.
+        *   **Literary Forensics:** Vocabulary diversity and phrase patterns.
+        *   **Unknown Unknowns:** Surface recurring challenges via bigram maps.
+
+        #### 🛡️ Security & Privacy
+        *   **The "Privacy Proxy":** Refining data locally before sending sanitized stats to LLMs.
+        *   **Insider Threat:** Pattern matching on communication logs.
+        
+        ---
+        #### 🎓 Education: LMS Discussion Forums
+        *Insights into what a group of students are discussing:*
+        *   Identifying the most common topics and themes students are talking about.
+        *   Surfacing frequently asked questions and recurring challenges.
+        *   Detecting sentiment trends (e.g., frustration, excitement, confusion) across the class.
+        *   Visualizing connections between concepts or issues using network graphs.
+        *   Highlighting emerging issues or "unknown unknowns" (e.g., a misunderstood assignment).
+        *   Comparing discussion dynamics before and after key events (e.g., exams).
+        *   Summarizing participation patterns (who is most/least active).
+        *   Providing instructors with actionable summaries for targeted intervention.
+        """)
+
 
 def render_analyst_help():
     with st.expander("🎓 Analyst's Guide", expanded=False):
