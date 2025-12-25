@@ -14,3 +14,4 @@ python-pptx
 beautifulsoup4
 requests
 scipy
+qrcode[pil]
