@@ -979,6 +979,43 @@ def render_use_cases():
         *   Providing instructors with actionable summaries for targeted intervention.
         """)
 
+def render_neurotech_case_study():
+    with st.expander("🔦 Spotlight: Analyzing Military Neurotechnology (a **Specific** Case Study)", expanded=False):
+        st.markdown("""
+        ### The Scenario
+        **The Artifact:** A dense, 50-page UNIDIR report titled *"Neurotechnology in the Military Domain."*
+        **The User:** A Defense Analyst with 5 minutes to extract actionable intelligence.
+        **The Goal:** Move beyond "what is this paper about?" to "what are the threats and opportunities?"
+
+        ---
+
+        ### 1. The "Sticky Concepts" (NPMI Tab)
+        *   **The Question:** "What specific types of risks are discussed?"
+        *   **The Signal:** The engine finds words that mathematically *stick together* more than random chance.
+        *   **The Result:** It surfaces **"Dual Use"** and **"Cognitive Liberty."**
+        *   **The Insight:** The strategic risk isn't just new weapons; it is civilian medical technology being repurposed for warfare (Dual Use), necessitating a legal/ethical framework (Liberty).
+
+        ### 2. The "Technical Signal" (Keyphrases Tab)
+        *   **The Question:** "Do I need to worry about brain implants yet?"
+        *   **The Signal:** TF-IDF filters out generic words to find unique technical terms.
+        *   **The Result:** High scores for **"Non-invasive,"** **"Transcranial,"** and **"Wearable."**
+        *   **The Insight:** The immediate operational reality is external headsets/helmets, not surgical implants.
+
+        ### 3. The "Semantic Network" (Graph Tab)
+        *   **The Question:** "How is the technology being applied?"
+        *   **The Signal:** The Graph links words based on proximity in the text.
+        *   **The Result:** 
+            *   Cluster A links **"Stimulation"** to **"Performance"** (Enhancement/Super-Soldiers).
+            *   Cluster B links **"Stimulation"** to **"Interrogation"** (Weaponization/Torture).
+        *   **The Insight:** The paper treats "Enhancement" and "Weaponization" as distinct operational clusters.
+
+        ### 4. The "Stakeholder Map" (Entities Tab)
+        *   **The Question:** "Who is involved?"
+        *   **The Signal:** Capitalized Name Extraction.
+        *   **The Result:** **"DARPA," "Neuralink," "Geneva Convention," "Human Rights Council."**
+        *   **The Insight:** Identifies the funding sources (DARPA) vs. the regulatory blockers (Geneva).
+        """)
+
 def render_analyst_help():
     with st.expander("🎓 Analyst's Guide", expanded=False):
         st.markdown("""
