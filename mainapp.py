@@ -1,5 +1,5 @@
 #  SIGNAL FOUNDRY (The Unstructured Data Intel Engine)
-#  Status: PRODUCTION (v2.8 - Cache Buster Edition)
+#  Status: PRODUCTION (v2.9 - Robust Graphics Safety)
 #  Architecture: Hybrid Streaming + "Data Refinery" Utility
 #
 import io
@@ -1047,7 +1047,7 @@ def call_llm_and_track_cost(system_prompt: str, user_prompt: str, config: dict):
 # ==========================================
 
 st.set_page_config(page_title="Signal Foundry", layout="wide")
-st.toast("v2.8 Loaded successfully", icon="🚀") # CACHE BUSTER TOAST
+st.toast("v2.9 Loaded successfully", icon="🚀") # CACHE BUSTER TOAST
 st.title("🧠 Signal Foundry: Unstructured Data Analytics")
 st.markdown("### *(or: data geiger counter~)*")
 
@@ -1354,8 +1354,13 @@ if combined_counts:
         if scanner.entity_counts:
             ent_df = pd.DataFrame(scanner.entity_counts.most_common(50), columns=["Entity", "Count"])
             st.dataframe(ent_df, use_container_width=True)
-            fig_e, _ = build_wordcloud_figure_from_counts(scanner.entity_counts, 100, 800, 400, "#111111", "Pastel1", None, 42, None)
-            st.pyplot(fig_e)
+            
+            # Simple Entity Cloud (Safety Wrapped)
+            try:
+                fig_e, _ = build_wordcloud_figure_from_counts(scanner.entity_counts, 100, 800, 400, "#111111", "Pastel1", combined_font_path, 42, None)
+                st.pyplot(fig_e)
+            except Exception as e:
+                st.warning(f"Could not generate Entity Cloud: {e}")
         else:
             st.info("No capitalized entities detected.")
 
