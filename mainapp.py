@@ -969,7 +969,7 @@ def render_workflow_guide():
         *   Seeing "run" and "running"? → Turn on **Lemmatization**.  
         *   Need to prove you didn’t hallucinate? → Download the **Hybrid Signature** (QR+heatmap).
 
-        **That’s it. Close this tab on day 2 and never open it again. You now own the room (or at least come to it with a unique, speicific insight~).**
+        **That’s it. Close this tab on day 2 and never open it again. You now own the room.**
         """)
 
 def render_lit_case_study():
@@ -1390,10 +1390,10 @@ with st.sidebar:
         help="The number of distinct themes the AI should attempt to find."
     )
 
-# -tabs layout
+# --- TABS LAYOUT ---
 tab_work, tab_learn = st.tabs(["🚀 Workspace", "📚 Learn (How to Use & Use-Cases)"])
 
-# learning tab (guide and use-cases/examples
+# 1. THE LEARNING TAB (Guides & Examples)
 with tab_learn:
     render_workflow_guide()
     render_use_cases()
@@ -1401,7 +1401,7 @@ with tab_learn:
     render_lit_case_study()
     render_analyst_help()
 
-# workspace tab, main 'engine'
+# 2. THE WORKSPACE TAB (Main Engine)
 with tab_work:
     with st.expander("🛠️ Data Refinery"):
         ref_file = st.file_uploader("CSV to Refine", type=['csv'])
@@ -1427,27 +1427,27 @@ with tab_work:
         # Only show this big button if we have more than 1 file/url
         if len(all_inputs) > 1:
             if st.button(f"⚡ Scan ALL {len(all_inputs)} Items (Batch)", type="primary"):
-                # to handle the reset logic based on user checkbox
+                # 1. Handle Reset Logic based on user checkbox
                 if clear_on_scan: 
                     reset_sketch()
                 
-                # setup progress
+                # 2. Setup Progress
                 prog_bar = st.progress(0)
                 status_box = st.empty()
                 
-                # to go through all files
+                # 3. Iterate through all files
                 for i, item in enumerate(all_inputs):
                     status_box.markdown(f"**Processing {i+1}/{len(all_inputs)}:** *{item.name}*...")
                     
-                    # detect format
+                    # Detect format
                     f_bytes = item.getvalue()
                     fname = item.name.lower()
                     
-                    # the logic to pick the reader (simplified detection for batch mode)
+                    # Logic to pick the reader (Simplified detection for batch mode)
                     batch_iter = iter([])
                     if fname.endswith(".csv"):
-                        # in batch mode, tries to auto-detect text columns or fallback to raw
-                        # batch mode is faster but less granular config than single mode
+                        # In batch mode, we try to auto-detect text columns or fallback to raw
+                        # This is a trade-off: Batch mode is faster but less granular config than single mode
                         headers = detect_csv_headers(f_bytes)
                         if headers:
                             batch_iter = read_rows_csv_structured(f_bytes, "auto", ",", True, [headers[0]], None, None, " ")
@@ -1468,17 +1468,16 @@ with tab_work:
                     else:
                         batch_iter = read_rows_raw_lines(f_bytes)
                         
-                    # process
+                    # Process
                     process_chunk_iter(batch_iter, clean_conf, proc_conf, st.session_state['sketch'], lemmatizer)
                     
-                    # update progress
+                    # Update Progress
                     prog_bar.progress((i + 1) / len(all_inputs))
                 
                 status_box.success(f"✅ Batch Complete! Processed {len(all_inputs)} files.")
                 st.rerun()
         # -------------------------
 
-        # individual scanner funtionality==================            
         for idx, f in enumerate(all_inputs):
             try:
                 # resource limit check
@@ -1494,7 +1493,7 @@ with tab_work:
                 is_pdf = lower.endswith(".pdf")
                 is_pptx = lower.endswith(".pptx")
                 
-                # default scan settings
+                # Default Scan Settings
                 scan_settings = {
                     "date_col": None,
                     "cat_col": None,
@@ -1504,12 +1503,12 @@ with tab_work:
                     "json_key": None
                 }
                 
-                with st.expander(f"🧩 Config: {fname}", expanded=False): # Collapsed by default to save space
+                with st.expander(f"🧩 Config: {fname}", expanded=False):
                     if is_csv:
                         headers = detect_csv_headers(file_bytes)
                         if headers:
                             scan_settings["has_header"] = True
-                            # st.info(f"Detected {len(headers)} columns.") # Reduced noise
+                            st.info(f"Detected {len(headers)} columns.")
                             scan_settings["text_cols"] = st.multiselect("Text Columns", headers, default=[headers[0]], key=f"txt_{idx}")
                             scan_settings["date_col"] = st.selectbox("Date Column (Optional)", ["(None)"] + headers, key=f"date_{idx}")
                             scan_settings["cat_col"] = st.selectbox("Category Column (Optional)", ["(None)"] + headers, key=f"cat_{idx}")
@@ -1564,7 +1563,7 @@ with tab_work:
                     if not clear_on_scan: st.rerun()
 
             except Exception as e:
-                st.error(f"Error processing {f.name}: {e}")
+                st.error(f"Error: {e}")
 
     # --- analysis phase
 
