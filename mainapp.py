@@ -351,9 +351,15 @@ def list_system_fonts() -> Dict[str, str]:
     return dict(sorted(mapping.items(), key=lambda x: x[0].lower()))
 
 def build_punct_translation(keep_hyphens: bool, keep_apostrophes: bool) -> dict:
+    #standard ASCII punctuation
     punct = string.punctuation
+    
+    # adding "smart/curly" quotes ( for "between vs between)
+    punct += "“”‘’" 
+
     if keep_hyphens: punct = punct.replace("-", "")
     if keep_apostrophes: punct = punct.replace("'", "")
+    
     return str.maketrans("", "", punct)
 
 def parse_user_stopwords(raw: str) -> Tuple[List[str], List[str]]:
