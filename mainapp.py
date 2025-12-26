@@ -120,7 +120,6 @@ URL_EMAIL_RE = re.compile(
     r'|(?:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
     flags=re.IGNORECASE
 )
-# was NER lite pattern (capitalized words in sequence)
 # NER Pattern: matches 3 types of entities:
 # acronyms (2+ Uppercase): DARPA, EU, NATO
 # complex IDs (Cap start + digits/hyphens): COVID-19, Mi-6, G-7
@@ -351,14 +350,16 @@ def list_system_fonts() -> Dict[str, str]:
     return dict(sorted(mapping.items(), key=lambda x: x[0].lower()))
 
 def build_punct_translation(keep_hyphens: bool, keep_apostrophes: bool) -> dict:
-    #standard ASCII punctuation
+    # 1. Standard ASCII punctuation
     punct = string.punctuation
     
-    # adding "smart/curly" quotes ( for "between vs between)
-    punct += "“”‘’" 
+    # 2. Add Unicode "Smart" quotes & dashes
+    punct += "“”‘’–—" 
 
-    if keep_hyphens: punct = punct.replace("-", "")
-    if keep_apostrophes: punct = punct.replace("'", "")
+    if keep_hyphens: 
+        for char in "-–—": punct = punct.replace(char, "")
+    if keep_apostrophes: 
+        for char in "'’": punct = punct.replace(char, "")
     
     return str.maketrans("", "", punct)
 
@@ -1394,7 +1395,7 @@ with st.sidebar:
     )
 
 # --- TABS LAYOUT ---
-tab_work, tab_learn = st.tabs(["🚀 Workspace", "📚 Learn (How to Use this app & Use-Cases)"])
+tab_work, tab_learn = st.tabs(["🚀 Workspace", "📚 Learn (How to Use & Use-Cases)"])
 
 # 1. THE LEARNING TAB (Guides & Examples)
 with tab_learn:
