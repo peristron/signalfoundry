@@ -1195,18 +1195,15 @@ st.toast("app loaded successfully", icon="🚀") # cache buster
 st.title("🧠 Signal Foundry: Unstructured Data Analytics")
 st.markdown("### *(or: data geiger counter~)*")
 
-render_workflow_guide() # calling restored full guide
-render_use_cases()
-render_neurotech_case_study()
-render_lit_case_study()
+# Initialize NLP globally
 analyzer, lemmatizer = setup_nlp_resources()
 
-# --- sidebar
+# --- SIDEBAR (Global Inputs) ---
 with st.sidebar:
     st.header("📂 Data Input")
     uploaded_files = st.file_uploader("Upload Files", type=["csv", "xlsx", "vtt", "txt", "json", "pdf", "pptx"], accept_multiple_files=True)
     
-    # --modfified logic
+    # --modified logic (Additive Mode Safety)
     
     # checking if there's currently data
     has_data = st.session_state['sketch'].total_rows_processed > 0
@@ -1370,515 +1367,525 @@ with st.sidebar:
         help="The number of distinct themes the AI should attempt to find."
     )
 
-with st.expander("🛠️ Data Refinery"):
-    ref_file = st.file_uploader("CSV to Refine", type=['csv'])
-    if ref_file and st.button("🚀 Run Refinery"):
-        zip_data = perform_refinery_job(ref_file, 50000, clean_conf)
-        if zip_data: st.download_button("Download ZIP", zip_data, "refined.zip", "application/zip")
+# --- TABS LAYOUT ---
+tab_work, tab_learn = st.tabs(["🚀 Workspace", "📚 Learn"])
 
-# --scanning phase
-all_inputs = list(uploaded_files) if uploaded_files else []
-if url_input:
-    for u in url_input.split('\n'):
-        if u.strip(): 
-            txt = fetch_url_content(u.strip())
-            if txt: 
-                all_inputs.append(VirtualFile(f"url_{hash(u)}.txt", txt))
-                time.sleep(URL_SCRAPE_RATE_LIMIT_SECONDS) # RATE LIMITING
-if manual_input: all_inputs.append(VirtualFile("manual.txt", manual_input))
+# 1. THE LEARNING TAB (Guides & Examples)
+with tab_learn:
+    render_workflow_guide()
+    render_use_cases()
+    render_neurotech_case_study()
+    render_lit_case_study()
+    render_analyst_help()
 
-if all_inputs:
-    st.subheader("🚀 Scanning Phase")
-    
-    for idx, f in enumerate(all_inputs):
-        try:
-            # resource limit check
-            if f.getbuffer().nbytes > MAX_FILE_SIZE_MB * 1024 * 1024:
-                st.error(f"❌ File **{f.name}** exceeds {MAX_FILE_SIZE_MB}MB limit.")
-                continue
+# 2. THE WORKSPACE TAB (Main Engine)
+with tab_work:
+    with st.expander("🛠️ Data Refinery"):
+        ref_file = st.file_uploader("CSV to Refine", type=['csv'])
+        if ref_file and st.button("🚀 Run Refinery"):
+            zip_data = perform_refinery_job(ref_file, 50000, clean_conf)
+            if zip_data: st.download_button("Download ZIP", zip_data, "refined.zip", "application/zip")
 
-            file_bytes, fname, lower = f.getvalue(), f.name, f.name.lower()
-            is_csv = lower.endswith(".csv")
-            is_xlsx = lower.endswith((".xlsx", ".xlsm"))
-            is_json = lower.endswith(".json")
-            is_vtt = lower.endswith(".vtt")
-            is_pdf = lower.endswith(".pdf")
-            is_pptx = lower.endswith(".pptx")
-            
-            # Default Scan Settings
-            scan_settings = {
-                "date_col": None,
-                "cat_col": None,
-                "text_cols": [],
-                "has_header": False,
-                "sheet_name": None,
-                "json_key": None
-            }
-            
-            with st.expander(f"🧩 Config: {fname}", expanded=True):
-                if is_csv:
-                    headers = detect_csv_headers(file_bytes)
-                    if headers:
-                        scan_settings["has_header"] = True
-                        st.info(f"Detected {len(headers)} columns.")
-                        scan_settings["text_cols"] = st.multiselect("Text Columns", headers, default=[headers[0]], key=f"txt_{idx}")
-                        scan_settings["date_col"] = st.selectbox("Date Column (Optional)", ["(None)"] + headers, key=f"date_{idx}")
-                        scan_settings["cat_col"] = st.selectbox("Category Column (Optional)", ["(None)"] + headers, key=f"cat_{idx}")
-                        
-                        if scan_settings["date_col"] == "(None)": scan_settings["date_col"] = None
-                        if scan_settings["cat_col"] == "(None)": scan_settings["cat_col"] = None
-                    else:
-                        st.warning("No headers detected. Scanning as raw text.")
-                elif is_xlsx:
-                    sheets = get_excel_sheetnames(file_bytes)
-                    scan_settings["sheet_name"] = st.selectbox("Sheet", sheets, key=f"sheet_{idx}")
-                    if scan_settings["sheet_name"]:
-                         scan_settings["has_header"] = st.checkbox("Has Header Row", True, key=f"xls_head_{idx}")
-                elif is_json:
-                    scan_settings["json_key"] = st.text_input("JSON Key (Optional)", "", key=f"json_{idx}")
+    # --scanning phase
+    all_inputs = list(uploaded_files) if uploaded_files else []
+    if url_input:
+        for u in url_input.split('\n'):
+            if u.strip(): 
+                txt = fetch_url_content(u.strip())
+                if txt: 
+                    all_inputs.append(VirtualFile(f"url_{hash(u)}.txt", txt))
+                    time.sleep(URL_SCRAPE_RATE_LIMIT_SECONDS) # RATE LIMITING
+    if manual_input: all_inputs.append(VirtualFile("manual.txt", manual_input))
 
-            if st.button(f"⚡ Start Scan: {fname}", key=f"btn_{idx}"):
-                if clear_on_scan: reset_sketch()
-                bar = st.progress(0)
-                status = st.empty()
-                
-                # select iterator
-                rows_iter = iter([])
-                approx = estimate_row_count_from_bytes(file_bytes)
-
-                if is_csv and scan_settings["has_header"] and scan_settings["text_cols"]:
-                    rows_iter = read_rows_csv_structured(
-                        file_bytes, "auto", ",", True, 
-                        scan_settings["text_cols"], scan_settings["date_col"], scan_settings["cat_col"], " "
-                    )
-                elif is_xlsx and scan_settings["sheet_name"]:
-                    rows_iter = iter_excel_structured(
-                        file_bytes, scan_settings["sheet_name"], scan_settings["has_header"], 
-                        ["col_0"], None, None, " " 
-                    )
-                elif is_pdf:
-                    rows_iter = read_rows_pdf(file_bytes)
-                elif is_pptx:
-                    rows_iter = read_rows_pptx(file_bytes)
-                elif is_vtt:
-                    rows_iter = read_rows_vtt(file_bytes)
-                elif is_json:
-                    rows_iter = read_rows_json(file_bytes, scan_settings["json_key"])
-                else:
-                    # fallback raw line reader
-                    rows_iter = read_rows_raw_lines(file_bytes)
-                
-                # run
-                process_chunk_iter(rows_iter, clean_conf, proc_conf, st.session_state['sketch'], lemmatizer, lambda n: status.text(f"Rows: {n:,}"))
-                bar.progress(100)
-                status.success("Done!")
-                if not clear_on_scan: st.rerun()
-
-        except Exception as e:
-            st.error(f"Error: {e}")
-
-# --- analysis phase
-
-scanner = st.session_state['sketch']
-
-# now: dynamic filtering
-# filter the view based on the CURRENT slider setting. 
-# ensures that if user changes the slider from 2 to 7, the 
-# wordcloud updates immediately without needing to re-scan the files
-combined_counts = Counter({
-    k: v for k, v in scanner.global_counts.items() 
-    if len(str(k)) >= proc_conf.min_word_len
-    and k not in proc_conf.stopwords # <--- New Logic
-})
-
-if combined_counts:
-    st.divider()
-    st.header("📊 Analysis Dashboard")
-    
-    # calculate stats upfront
-    text_stats = calculate_text_stats(combined_counts, scanner.total_rows_processed)
-    render_auto_insights(scanner, proc_conf)
-    # main tabs
-    tab_main, tab_trend, tab_ent, tab_key = st.tabs(["☁️ Word Cloud & Stats", "📈 Trends", "👥 Entities", "🔑 Keyphrases"])
-    
-    with tab_main:
-        if enable_sentiment:
-            top_keys = [k for k,v in combined_counts.most_common(1000)]
-            term_sentiments = get_sentiments(analyzer, tuple(top_keys))
-            if proc_conf.compute_bigrams:
-                 top_bg_keys = [" ".join(k) for k,v in scanner.global_bigrams.most_common(2000)]
-                 term_sentiments.update(get_sentiments(analyzer, tuple(top_bg_keys)))
-            c_color_func = create_sentiment_color_func(term_sentiments, pos_color, neg_color, neu_color, pos_threshold, neg_threshold)
-            fig, _ = build_wordcloud_figure_from_counts(combined_counts, max_words, 800, 400, bg_color, colormap, combined_font_path, 42, c_color_func)
-        else:
-            term_sentiments = {}
-            fig, _ = build_wordcloud_figure_from_counts(combined_counts, max_words, 800, 400, bg_color, colormap, combined_font_path, 42, None)
-            
-        st.pyplot(fig, use_container_width=True)
-        st.download_button("📥 download combined png", fig_to_png_bytes(fig), "combined_wc.png", "image/png")
+    if all_inputs:
+        st.subheader("🚀 Scanning Phase")
         
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Total Tokens", f"{text_stats['Total Tokens']:,}")
-        c2.metric("Unique Vocab", f"{text_stats['Unique Vocabulary']:,}")
-        c3.metric("Docs/Rows", f"{text_stats['Total Rows']:,}")
-        c4.metric("Lexical Diversity", f"{text_stats['Lexical Diversity']}")
-
-    with tab_trend:
-        if scanner.temporal_counts:
-            st.markdown("#### Word Volume Over Time")
-            trend_data = []
-            for d_str, counts in scanner.temporal_counts.items():
-                trend_data.append({"Date": d_str, "Volume": sum(counts.values())})
-            
-            df_trend = pd.DataFrame(trend_data).sort_values("Date")
-            st.line_chart(df_trend.set_index("Date"))
-            
-            st.markdown("#### Specific Term Trends")
-            terms_to_plot = st.multiselect("Select terms to plot", [t for t, c in combined_counts.most_common(50)])
-            if terms_to_plot:
-                term_trend_data = []
-                for d_str, counts in scanner.temporal_counts.items():
-                    row = {"Date": d_str}
-                    for t in terms_to_plot: row[t] = counts[t]
-                    term_trend_data.append(row)
-                df_term_trend = pd.DataFrame(term_trend_data).sort_values("Date").set_index("Date")
-                st.line_chart(df_term_trend)
-        else:
-            st.info("No Date column was selected during scan (or no valid dates found).")
-
-    with tab_ent:
-        st.markdown("#### Top Entities (NER Lite)")
-        if scanner.entity_counts:
-            ent_df = pd.DataFrame(scanner.entity_counts.most_common(50), columns=["Entity", "Count"])
-            st.dataframe(ent_df, use_container_width=True)
-            
-            # simple entity cloud (safety wrapped)
+        for idx, f in enumerate(all_inputs):
             try:
-                fig_e, _ = build_wordcloud_figure_from_counts(scanner.entity_counts, 100, 800, 400, "#111111", "Pastel1", combined_font_path, 42, None)
-                st.pyplot(fig_e)
-            except Exception as e:
-                st.warning(f"Could not generate Entity Cloud: {e}")
-        else:
-            st.info("No capitalized entities detected.")
+                # resource limit check
+                if f.getbuffer().nbytes > MAX_FILE_SIZE_MB * 1024 * 1024:
+                    st.error(f"❌ File **{f.name}** exceeds {MAX_FILE_SIZE_MB}MB limit.")
+                    continue
 
-    with tab_key:
-        st.markdown("#### TF-IDF Keyphrases")
-        st.caption("These words are 'Unique' to specific documents, filtered out generic high-frequency noise.")
-        df_tfidf = calculate_tfidf(scanner, 50)
-        st.dataframe(df_tfidf, use_container_width=True)
-
-    st.divider()
-    
-    # advanced sections
-    
-    if enable_sentiment and beta_dist:
-        st.subheader("⚖️ Bayesian Sentiment Inference")
-        with st.expander("🧠 How to read this chart (and why it matters)", expanded=False):
-            st.markdown("""
-            **The Problem:** Standard sentiment analysis gives you a single number (e.g., "52% Positive"). But is that 52% based on 5 tweets or 5 million? A single number hides that uncertainty.
-            
-            **The Solution:** This chart calculates the **Probability** of the true sentiment.
-            *   **The Curve (PDF):** Represents likelihood. The higher the peak, the more likely that specific sentiment score is the "truth."
-            *   **The Shape:** 
-                *   **Narrow & Tall:** We have lots of data. We are highly confident the sentiment is exactly here.
-                *   **Wide & Flat:** We don't have enough data. The true sentiment could be almost anything.
-            *   **The Green Zone (95% CI):** There is a 95% probability the "True" sentiment falls within this range. 
-            
-            **Decision Tip:** If the green zone is very wide (e.g., spanning 30% to 70%), **do not** make business decisions based on sentiment yet; you need more data.
-            """)
-
-        bayes_result = perform_bayesian_sentiment_analysis(combined_counts, term_sentiments, pos_threshold, neg_threshold)
-        if bayes_result:
-            b_col1, b_col2 = st.columns([1, 2])
-            with b_col1:
-                st.metric("Positive Words Observed", f"{bayes_result['pos_count']:,}")
-                st.metric("Negative Words Observed", f"{bayes_result['neg_count']:,}")
-                st.info(f"Mean Expected Positive Rate: **{bayes_result['mean_prob']:.1%}**")
-                st.success(f"95% Credible Interval:\n**{bayes_result['ci_low']:.1%} — {bayes_result['ci_high']:.1%}**")
-            with b_col2:
-                fig_bayes, ax_bayes = plt.subplots(figsize=(8, 4))
-                ax_bayes.plot(bayes_result['x_axis'], bayes_result['pdf_y'], lw=2, color='blue', label='Posterior PDF')
-                ax_bayes.fill_between(bayes_result['x_axis'], 0, bayes_result['pdf_y'], 
-                                    where=(bayes_result['x_axis'] > bayes_result['ci_low']) & (bayes_result['x_axis'] < bayes_result['ci_high']),
-                                    color='green', alpha=0.3, label='95% Credible Interval')
-                ax_bayes.set_title("Bayesian Update of Sentiment Confidence", fontsize=10)
-                ax_bayes.legend()
-                ax_bayes.grid(True, alpha=0.2)
-                st.pyplot(fig_bayes)
-                plt.close(fig_bayes)
-
-    show_graph = proc_conf.compute_bigrams and scanner.global_bigrams and st.checkbox("🕸️ Show Network Graph & Advanced Analytics", value=True)
-    if show_graph:
-        st.subheader("🔗 Network Graph")
-        with st.expander("🛠️ Graph Settings & Physics", expanded=False):
-            c1, c2, c3 = st.columns(3)
-            min_edge_weight = c1.slider("Min Link Frequency", 2, 100, 2)
-            max_nodes_graph = c1.slider("Max Nodes", 10, 200, 80)
-            repulsion_val = c2.slider("Repulsion", 100, 3000, 1000)
-            edge_len_val = c2.slider("Edge Length", 50, 500, 250)
-            physics_enabled = c3.checkbox("Enable Physics", True)
-            directed_graph = c3.checkbox("Directed Arrows", False)
-            color_mode = c3.radio("Color By:", ["Community (Topic)", "Sentiment"], index=0)
-
-        G = nx.DiGraph() if directed_graph else nx.Graph()
-        filtered_bigrams = {k: v for k, v in scanner.global_bigrams.items() if v >= min_edge_weight}
-        sorted_connections = sorted(filtered_bigrams.items(), key=lambda x: x[1], reverse=True)[:max_nodes_graph]
-        
-        if sorted_connections:
-            G.add_edges_from((src, tgt, {'weight': w}) for (src, tgt), w in sorted_connections)
-            try: deg_centrality = nx.degree_centrality(G)
-            except: deg_centrality = {n: 1 for n in G.nodes()}
-            community_map = {}
-            ai_cluster_info = ""
-            
-            if color_mode == "Community (Topic)":
-                G_undir = G.to_undirected() if directed_graph else G
-                try:
-                    communities = nx_comm.greedy_modularity_communities(G_undir)
-                    cluster_descriptions = []
-                    for group_id, community in enumerate(communities):
-                        top_in_cluster = sorted(list(community), key=lambda x: combined_counts[x], reverse=True)[:5]
-                        cluster_descriptions.append(f"- Cluster {group_id+1}: {', '.join(top_in_cluster)}")
-                        for node in community: community_map[node] = group_id
-                    ai_cluster_info = "\n".join(cluster_descriptions)
-                except: pass
-
-            community_colors = ["#FF4B4B", "#4589ff", "#ffa421", "#3cdb82", "#8b46ff", "#ff4b9f", "#00c0f2"]
-            nodes, edges = [], []
-            for node_id in G.nodes():
-                size = 15 + (deg_centrality.get(node_id, 0) * 80)
-                node_color = "#808080"
-                if color_mode == "Sentiment" and enable_sentiment:
-                    s = term_sentiments.get(node_id, 0)
-                    if s >= pos_threshold: node_color = pos_color
-                    elif s <= neg_threshold: node_color = neg_color
-                elif color_mode == "Community (Topic)":
-                    gid = community_map.get(node_id, 0)
-                    node_color = community_colors[gid % len(community_colors)]
-
-                # re-added font config for white, legible text
-                nodes.append(Node(
-                    id=node_id, 
-                    label=node_id, 
-                    size=size, 
-                    color=node_color,
-                    font={'color': 'white', 'size': 20, 'strokeWidth': 2, 'strokeColor': '#000000'}
-                ))
-
-            for (source, target), weight in sorted_connections:
-                width = 1 + math.log(weight) * 0.8
-                edges.append(Edge(source=source, target=target, width=width, color="#e0e0e0"))
-            
-            # re-added interaction dict for zoom/pan buttons
-            config = Config(
-                width=1000, 
-                height=700, 
-                directed=directed_graph, 
-                physics=physics_enabled, 
-                hierarchy=False, 
-                interaction={"navigationButtons": True, "zoomView": True}, 
-                physicsSettings={"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -abs(repulsion_val), "springLength": edge_len_val, "springConstant": 0.05, "damping": 0.4}}
-            )
-            
-            st.info("💡 **Navigation Tip:** Use the buttons in the **bottom-right** of the graph to Zoom & Pan.")
-            agraph(nodes=nodes, edges=edges, config=config)
-            
-            # graph analytics tabs
-            tab_g1, tab_g2, tab_g3, tab_g4 = st.tabs(["Basic Stats", "Top Nodes", "Text Stats", "🔥 Heatmap"])
-            with tab_g1:
-                col_b1, col_b2, col_b3 = st.columns(3)
-                col_b1.metric("Nodes", G.number_of_nodes())
-                col_b2.metric("Edges", G.number_of_edges())
-                try: col_b3.metric("Density", f"{nx.density(G):.4f}")
-                except: pass
-            with tab_g2:
-                node_weights = {n: 0 for n in G.nodes()}
-                for u, v, data in G.edges(data=True):
-                    w = data.get('weight', 1)
-                    node_weights[u] += w
-                    node_weights[v] += w
-                st.dataframe(pd.DataFrame(list(node_weights.items()), columns=["Node", "Weighted Degree"]).sort_values("Weighted Degree", ascending=False).head(50), use_container_width=True)
-            with tab_g3:
-                 c1, c2, c3 = st.columns(3)
-                 c1.metric("Total Tokens", f"{text_stats['Total Tokens']:,}")
-                 c2.metric("Unique Vocab", f"{text_stats['Unique Vocabulary']:,}")
-                 c3.metric("Lexical Diversity", f"{text_stats['Lexical Diversity']}")
-            with tab_g4:
-                # hybrid heatmap-QR generator
-                viz_mode = st.radio("Visualization Mode", ["Standard Heatmap", "Hybrid Signature (Scanable)"], horizontal=True, label_visibility="collapsed")
+                file_bytes, fname, lower = f.getvalue(), f.name, f.name.lower()
+                is_csv = lower.endswith(".csv")
+                is_xlsx = lower.endswith((".xlsx", ".xlsm"))
+                is_json = lower.endswith(".json")
+                is_vtt = lower.endswith(".vtt")
+                is_pdf = lower.endswith(".pdf")
+                is_pptx = lower.endswith(".pptx")
                 
-                top_20 = [w for w, c in combined_counts.most_common(20)]
+                # Default Scan Settings
+                scan_settings = {
+                    "date_col": None,
+                    "cat_col": None,
+                    "text_cols": [],
+                    "has_header": False,
+                    "sheet_name": None,
+                    "json_key": None
+                }
                 
-                if len(top_20) > 1:
-                    # 1. Generate the Matrix Data
-                    mat = np.zeros((len(top_20), len(top_20)))
-                    for i, w1 in enumerate(top_20):
-                        for j, w2 in enumerate(top_20):
-                            if i != j: mat[i][j] = scanner.global_bigrams.get((w1, w2), 0) + scanner.global_bigrams.get((w2, w1), 0)
-                    
-                    # 2. Plot Heatmap to a PIL Image (Memory Buffer)
-                    fig_h, ax_h = plt.subplots(figsize=(10, 10)) # Square aspect ratio is better for QR
-                    ax_h.imshow(mat, cmap=colormap, interpolation='nearest') # 'nearest' gives distinct blocks
-                    
-                    # Clean up the plot for the "Signature" look (remove axis noise if in QR mode)
-                    if viz_mode == "Hybrid Signature (Scanable)":
-                        ax_h.axis('off')
-                        plt.tight_layout(pad=0)
-                    else:
-                        ax_h.set_xticks(np.arange(len(top_20)))
-                        ax_h.set_yticks(np.arange(len(top_20)))
-                        ax_h.set_xticklabels(top_20, rotation=45, ha="right")
-                        ax_h.set_yticklabels(top_20)
-                    
-                    # Save Matplotlib fig to PIL Object
-                    buf = BytesIO()
-                    fig_h.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
-                    buf.seek(0)
-                    
-                    if viz_mode == "Standard Heatmap":
-                        st.pyplot(fig_h)
-                    
-                    elif viz_mode == "Hybrid Signature (Scanable)":
-                        if qrcode is None:
-                            st.error("🚨 Please install: `pip install qrcode[pil]`")
+                with st.expander(f"🧩 Config: {fname}", expanded=True):
+                    if is_csv:
+                        headers = detect_csv_headers(file_bytes)
+                        if headers:
+                            scan_settings["has_header"] = True
+                            st.info(f"Detected {len(headers)} columns.")
+                            scan_settings["text_cols"] = st.multiselect("Text Columns", headers, default=[headers[0]], key=f"txt_{idx}")
+                            scan_settings["date_col"] = st.selectbox("Date Column (Optional)", ["(None)"] + headers, key=f"date_{idx}")
+                            scan_settings["cat_col"] = st.selectbox("Category Column (Optional)", ["(None)"] + headers, key=f"cat_{idx}")
+                            
+                            if scan_settings["date_col"] == "(None)": scan_settings["date_col"] = None
+                            if scan_settings["cat_col"] == "(None)": scan_settings["cat_col"] = None
                         else:
-                            from PIL import Image, ImageEnhance
-                            
-                            # A. Prepare the Heatmap (The "Artistic Background")
-                            heatmap_img = Image.open(buf).convert("RGBA")
-                            
-                            # Brighten heatmap so dark QR dots stand out against it
-                            enhancer = ImageEnhance.Brightness(heatmap_img)
-                            heatmap_img = enhancer.enhance(1.5) 
-                            
-                            # B. Generate the QR (The "Data Layer")
-                            signature_payload = (
-                                f"SIGNAL FOUNDRY\nRef: {st.session_state.get('last_sketch_hash', 'SESSION')}\n"
-                                f"Top: {', '.join(top_20[:3])}"
-                            )
-                            qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=1)
-                            qr.add_data(signature_payload)
-                            qr.make(fit=True)
-                            
-                            # Create QR image: Black Data, Transparent Background
-                            qr_img = qr.make_image(fill_color="black", back_color="transparent").convert("RGBA")
-                            
-                            # C. Composite (Merge)
-                            # Resize heatmap to match QR exactly
-                            heatmap_resized = heatmap_img.resize(qr_img.size)
-                            
-                            # Overlay: The Heatmap is the "Paper", the QR is the "Ink"
-                            # We create a new image combining them
-                            hybrid_img = Image.alpha_composite(heatmap_resized, qr_img)
-                            
-                            c1, c2 = st.columns([2, 1])
-                            with c1:
-                                st.image(hybrid_img, caption="Scan this Heatmap to verify analysis data.", use_container_width=True)
-                            with c2:
-                                st.markdown("### 🧬 Hybrid Signature")
-                                st.info("The colors represent the data relationships (Heatmap). The dark overlay pattern encodes the document metadata (QR).")
-                                
-                                # Convert hybrid to bytes for download
-                                final_buf = BytesIO()
-                                hybrid_img.save(final_buf, format="PNG")
-                                st.download_button("📥 Download Signature", final_buf.getvalue(), "heatmap_signature.png", "image/png")
-                else:
-                    st.info("Not enough data to generate signature.")
-                #
+                            st.warning("No headers detected. Scanning as raw text.")
+                    elif is_xlsx:
+                        sheets = get_excel_sheetnames(file_bytes)
+                        scan_settings["sheet_name"] = st.selectbox("Sheet", sheets, key=f"sheet_{idx}")
+                        if scan_settings["sheet_name"]:
+                             scan_settings["has_header"] = st.checkbox("Has Header Row", True, key=f"xls_head_{idx}")
+                    elif is_json:
+                        scan_settings["json_key"] = st.text_input("JSON Key (Optional)", "", key=f"json_{idx}")
 
-    st.subheader("🔍 Bayesian Theme Discovery")
-    if len(scanner.topic_docs) > 5 and DictVectorizer:
-        with st.spinner(f"Running {topic_model_type} Topic Modeling..."):
-            topics = perform_topic_modeling(scanner.topic_docs, n_topics, topic_model_type)
-        if topics:
-            cols = st.columns(len(topics))
-            for idx, topic in enumerate(topics):
-                with cols[idx]:
-                    st.markdown(f"**Topic {topic['id']}**")
-                    for w in topic['words']: st.markdown(f"`{w}`")
-    else:
-        st.info("Needs more data/docs to model topics.")
+                if st.button(f"⚡ Start Scan: {fname}", key=f"btn_{idx}"):
+                    if clear_on_scan: reset_sketch()
+                    bar = st.progress(0)
+                    status = st.empty()
+                    
+                    # select iterator
+                    rows_iter = iter([])
+                    approx = estimate_row_count_from_bytes(file_bytes)
 
-    # detailed frequency tables
-    st.divider()
-    st.subheader(f"📊 Frequency Tables (Top {top_n})")
-    most_common = combined_counts.most_common(top_n)
-    data = []
-    if enable_sentiment:
-        for w, f in most_common:
-            score = term_sentiments.get(w, 0.0)
-            category = get_sentiment_category(score, pos_threshold, neg_threshold)
-            data.append([w, f, score, category])
-    else:
-        data = [[w, f] for w, f in most_common]
+                    if is_csv and scan_settings["has_header"] and scan_settings["text_cols"]:
+                        rows_iter = read_rows_csv_structured(
+                            file_bytes, "auto", ",", True, 
+                            scan_settings["text_cols"], scan_settings["date_col"], scan_settings["cat_col"], " "
+                        )
+                    elif is_xlsx and scan_settings["sheet_name"]:
+                        rows_iter = iter_excel_structured(
+                            file_bytes, scan_settings["sheet_name"], scan_settings["has_header"], 
+                            ["col_0"], None, None, " " 
+                        )
+                    elif is_pdf:
+                        rows_iter = read_rows_pdf(file_bytes)
+                    elif is_pptx:
+                        rows_iter = read_rows_pptx(file_bytes)
+                    elif is_vtt:
+                        rows_iter = read_rows_vtt(file_bytes)
+                    elif is_json:
+                        rows_iter = read_rows_json(file_bytes, scan_settings["json_key"])
+                    else:
+                        # fallback raw line reader
+                        rows_iter = read_rows_raw_lines(file_bytes)
+                    
+                    # run
+                    process_chunk_iter(rows_iter, clean_conf, proc_conf, st.session_state['sketch'], lemmatizer, lambda n: status.text(f"Rows: {n:,}"))
+                    bar.progress(100)
+                    status.success("Done!")
+                    if not clear_on_scan: st.rerun()
 
-    cols = ["word", "count"] + (["sentiment", "category"] if enable_sentiment else [])
-    st.dataframe(pd.DataFrame(data, columns=cols), use_container_width=True)
-    
-    if proc_conf.compute_bigrams and scanner.global_bigrams:
-        st.write("Bigrams (By Frequency)")
-        top_bg = scanner.global_bigrams.most_common(top_n)
-        bg_data = []
-        if enable_sentiment:
-            for bg_tuple, f in top_bg:
-                bg_str = " ".join(bg_tuple)
-                score = term_sentiments.get(bg_str, 0.0)
-                category = get_sentiment_category(score, pos_threshold, neg_threshold)
-                bg_data.append([bg_str, f, score, category])
-        else:
-            bg_data = [[" ".join(bg), f] for bg, f in top_bg]
-        bg_cols = ["bigram", "count"] + (["sentiment", "category"] if enable_sentiment else [])
-        st.dataframe(pd.DataFrame(bg_data, columns=bg_cols), use_container_width=True)
+            except Exception as e:
+                st.error(f"Error: {e}")
 
-        # NPMI in expander (original style)
-        with st.expander("🔬 Phrase Significance (NPMI Score)", expanded=False):
-            st.markdown("""
-            **NPMI (Normalized Pointwise Mutual Information)** finds words that *belong* together, rather than just words that appear often.
-            *   High Score (> 0.5): Strong association (e.g., "Artificial Intelligence").
-            *   Low Score (< 0.1): Random association (e.g., "of the").
-            """)
-            df_npmi = calculate_npmi(scanner.global_bigrams, combined_counts, scanner.total_rows_processed)
-            st.dataframe(df_npmi.head(top_n), use_container_width=True)
+    # --- analysis phase
 
-# --- AI analyst (restored full mode)
-if combined_counts and st.session_state['authenticated']:
-    st.divider()
-    st.subheader("🤖 AI Analyst")
-    
-    top_u = [w for w, c in combined_counts.most_common(50)]
-    top_b = [" ".join(bg) for bg, c in scanner.global_bigrams.most_common(20)]
-    ai_ctx_str = f"Top Words: {', '.join(top_u)}\nTop Bigrams: {', '.join(top_b)}\nGraph Clusters: {locals().get('ai_cluster_info', 'N/A')}"
-    
-    col_ai_1, col_ai_2 = st.columns(2)
-    
-    with col_ai_1:
-        st.markdown("**1. One-Click Theme Detection**")
-        if st.button("✨ Identify Key Themes", type="primary"):
-            with st.status("Analyzing..."):
-                system_prompt = "You are a qualitative data analyst. Analyze the provided word frequency lists to identify 3 key themes, potential anomalies, and a summary of the subject matter."
-                user_prompt = f"Data Context:\n{ai_ctx_str}"
-                response = call_llm_and_track_cost(system_prompt, user_prompt, ai_config)
-                st.session_state["ai_response"] = response
-                st.rerun()
+    scanner = st.session_state['sketch']
 
-    with col_ai_2:
-        st.markdown("**2. Ask the Data**")
-        user_question = st.text_area("Ask a specific question:", height=100, placeholder="e.g., 'What are the main complaints about pricing?'")
-        if st.button("Ask Question"):
-            if user_question.strip():
-                with st.status("Thinking..."):
-                    system_prompt = "You are an expert analyst. Answer the user's question based ONLY on the provided summary statistics (word counts and associations). If you cannot answer from the data, say so."
-                    user_prompt = f"Data Context:\n{ai_ctx_str}\n\nUser Question: {user_question}"
-                    response = call_llm_and_track_cost(system_prompt, user_prompt, ai_config)
-                    st.session_state["ai_response"] = f"**Q: {user_question}**\n\n{response}"
-                    st.rerun()
-            else:
-                st.warning("Please enter a question.")
+    # now: dynamic filtering with VISUALIZATION FIX (Instant Update)
+    combined_counts = Counter({
+        k: v for k, v in scanner.global_counts.items() 
+        if len(str(k)) >= proc_conf.min_word_len
+        and k not in proc_conf.stopwords # <--- Dynamic filtering
+    })
 
-    if st.session_state["ai_response"]:
+    if combined_counts:
         st.divider()
-        st.markdown("### 📋 AI Output")
-        st.markdown(st.session_state["ai_response"])
+        st.header("📊 Analysis Dashboard")
+        
+        # calculate stats upfront
+        text_stats = calculate_text_stats(combined_counts, scanner.total_rows_processed)
+        render_auto_insights(scanner, proc_conf)
+        # main tabs
+        tab_main, tab_trend, tab_ent, tab_key = st.tabs(["☁️ Word Cloud & Stats", "📈 Trends", "👥 Entities", "🔑 Keyphrases"])
+        
+        with tab_main:
+            if enable_sentiment:
+                top_keys = [k for k,v in combined_counts.most_common(1000)]
+                term_sentiments = get_sentiments(analyzer, tuple(top_keys))
+                if proc_conf.compute_bigrams:
+                     top_bg_keys = [" ".join(k) for k,v in scanner.global_bigrams.most_common(2000)]
+                     term_sentiments.update(get_sentiments(analyzer, tuple(top_bg_keys)))
+                c_color_func = create_sentiment_color_func(term_sentiments, pos_color, neg_color, neu_color, pos_threshold, neg_threshold)
+                fig, _ = build_wordcloud_figure_from_counts(combined_counts, max_words, 800, 400, bg_color, colormap, combined_font_path, 42, c_color_func)
+            else:
+                term_sentiments = {}
+                fig, _ = build_wordcloud_figure_from_counts(combined_counts, max_words, 800, 400, bg_color, colormap, combined_font_path, 42, None)
+                
+            st.pyplot(fig, use_container_width=True)
+            st.download_button("📥 download combined png", fig_to_png_bytes(fig), "combined_wc.png", "image/png")
+            
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Total Tokens", f"{text_stats['Total Tokens']:,}")
+            c2.metric("Unique Vocab", f"{text_stats['Unique Vocabulary']:,}")
+            c3.metric("Docs/Rows", f"{text_stats['Total Rows']:,}")
+            c4.metric("Lexical Diversity", f"{text_stats['Lexical Diversity']}")
+
+        with tab_trend:
+            if scanner.temporal_counts:
+                st.markdown("#### Word Volume Over Time")
+                trend_data = []
+                for d_str, counts in scanner.temporal_counts.items():
+                    trend_data.append({"Date": d_str, "Volume": sum(counts.values())})
+                
+                df_trend = pd.DataFrame(trend_data).sort_values("Date")
+                st.line_chart(df_trend.set_index("Date"))
+                
+                st.markdown("#### Specific Term Trends")
+                terms_to_plot = st.multiselect("Select terms to plot", [t for t, c in combined_counts.most_common(50)])
+                if terms_to_plot:
+                    term_trend_data = []
+                    for d_str, counts in scanner.temporal_counts.items():
+                        row = {"Date": d_str}
+                        for t in terms_to_plot: row[t] = counts[t]
+                        term_trend_data.append(row)
+                    df_term_trend = pd.DataFrame(term_trend_data).sort_values("Date").set_index("Date")
+                    st.line_chart(df_term_trend)
+            else:
+                st.info("No Date column was selected during scan (or no valid dates found).")
+
+        with tab_ent:
+            st.markdown("#### Top Entities (Polymorphic NER)")
+            if scanner.entity_counts:
+                ent_df = pd.DataFrame(scanner.entity_counts.most_common(50), columns=["Entity", "Count"])
+                st.dataframe(ent_df, use_container_width=True)
+                
+                # simple entity cloud (safety wrapped)
+                try:
+                    fig_e, _ = build_wordcloud_figure_from_counts(scanner.entity_counts, 100, 800, 400, "#111111", "Pastel1", combined_font_path, 42, None)
+                    st.pyplot(fig_e)
+                except Exception as e:
+                    st.warning(f"Could not generate Entity Cloud: {e}")
+            else:
+                st.info("No capitalized entities detected.")
+
+        with tab_key:
+            st.markdown("#### TF-IDF Keyphrases")
+            st.caption("These words are 'Unique' to specific documents, filtered out generic high-frequency noise.")
+            df_tfidf = calculate_tfidf(scanner, 50)
+            st.dataframe(df_tfidf, use_container_width=True)
+
+        st.divider()
+        
+        # advanced sections
+        
+        if enable_sentiment and beta_dist:
+            st.subheader("⚖️ Bayesian Sentiment Inference")
+            with st.expander("🧠 How to read this chart (and why it matters)", expanded=False):
+                st.markdown("""
+                **The Problem:** Standard sentiment analysis gives you a single number (e.g., "52% Positive"). But is that 52% based on 5 tweets or 5 million? A single number hides that uncertainty.
+                
+                **The Solution:** This chart calculates the **Probability** of the true sentiment.
+                *   **The Curve (PDF):** Represents likelihood. The higher the peak, the more likely that specific sentiment score is the "truth."
+                *   **The Shape:** 
+                    *   **Narrow & Tall:** We have lots of data. We are highly confident the sentiment is exactly here.
+                    *   **Wide & Flat:** We don't have enough data. The true sentiment could be almost anything.
+                *   **The Green Zone (95% CI):** There is a 95% probability the "True" sentiment falls within this range. 
+                
+                **Decision Tip:** If the green zone is very wide (e.g., spanning 30% to 70%), **do not** make business decisions based on sentiment yet; you need more data.
+                """)
+
+            bayes_result = perform_bayesian_sentiment_analysis(combined_counts, term_sentiments, pos_threshold, neg_threshold)
+            if bayes_result:
+                b_col1, b_col2 = st.columns([1, 2])
+                with b_col1:
+                    st.metric("Positive Words Observed", f"{bayes_result['pos_count']:,}")
+                    st.metric("Negative Words Observed", f"{bayes_result['neg_count']:,}")
+                    st.info(f"Mean Expected Positive Rate: **{bayes_result['mean_prob']:.1%}**")
+                    st.success(f"95% Credible Interval:\n**{bayes_result['ci_low']:.1%} — {bayes_result['ci_high']:.1%}**")
+                with b_col2:
+                    fig_bayes, ax_bayes = plt.subplots(figsize=(8, 4))
+                    ax_bayes.plot(bayes_result['x_axis'], bayes_result['pdf_y'], lw=2, color='blue', label='Posterior PDF')
+                    ax_bayes.fill_between(bayes_result['x_axis'], 0, bayes_result['pdf_y'], 
+                                        where=(bayes_result['x_axis'] > bayes_result['ci_low']) & (bayes_result['x_axis'] < bayes_result['ci_high']),
+                                        color='green', alpha=0.3, label='95% Credible Interval')
+                    ax_bayes.set_title("Bayesian Update of Sentiment Confidence", fontsize=10)
+                    ax_bayes.legend()
+                    ax_bayes.grid(True, alpha=0.2)
+                    st.pyplot(fig_bayes)
+                    plt.close(fig_bayes)
+
+        show_graph = proc_conf.compute_bigrams and scanner.global_bigrams and st.checkbox("🕸️ Show Network Graph & Advanced Analytics", value=True)
+        if show_graph:
+            st.subheader("🔗 Network Graph")
+            with st.expander("🛠️ Graph Settings & Physics", expanded=False):
+                c1, c2, c3 = st.columns(3)
+                min_edge_weight = c1.slider("Min Link Frequency", 2, 100, 2)
+                max_nodes_graph = c1.slider("Max Nodes", 10, 200, 80)
+                repulsion_val = c2.slider("Repulsion", 100, 3000, 1000)
+                edge_len_val = c2.slider("Edge Length", 50, 500, 250)
+                physics_enabled = c3.checkbox("Enable Physics", True)
+                directed_graph = c3.checkbox("Directed Arrows", False)
+                color_mode = c3.radio("Color By:", ["Community (Topic)", "Sentiment"], index=0)
+
+            G = nx.DiGraph() if directed_graph else nx.Graph()
+            filtered_bigrams = {k: v for k, v in scanner.global_bigrams.items() if v >= min_edge_weight}
+            sorted_connections = sorted(filtered_bigrams.items(), key=lambda x: x[1], reverse=True)[:max_nodes_graph]
+            
+            if sorted_connections:
+                G.add_edges_from((src, tgt, {'weight': w}) for (src, tgt), w in sorted_connections)
+                try: deg_centrality = nx.degree_centrality(G)
+                except: deg_centrality = {n: 1 for n in G.nodes()}
+                community_map = {}
+                ai_cluster_info = ""
+                
+                if color_mode == "Community (Topic)":
+                    G_undir = G.to_undirected() if directed_graph else G
+                    try:
+                        communities = nx_comm.greedy_modularity_communities(G_undir)
+                        cluster_descriptions = []
+                        for group_id, community in enumerate(communities):
+                            top_in_cluster = sorted(list(community), key=lambda x: combined_counts[x], reverse=True)[:5]
+                            cluster_descriptions.append(f"- Cluster {group_id+1}: {', '.join(top_in_cluster)}")
+                            for node in community: community_map[node] = group_id
+                        ai_cluster_info = "\n".join(cluster_descriptions)
+                    except: pass
+
+                community_colors = ["#FF4B4B", "#4589ff", "#ffa421", "#3cdb82", "#8b46ff", "#ff4b9f", "#00c0f2"]
+                nodes, edges = [], []
+                for node_id in G.nodes():
+                    size = 15 + (deg_centrality.get(node_id, 0) * 80)
+                    node_color = "#808080"
+                    if color_mode == "Sentiment" and enable_sentiment:
+                        s = term_sentiments.get(node_id, 0)
+                        if s >= pos_threshold: node_color = pos_color
+                        elif s <= neg_threshold: node_color = neg_color
+                    elif color_mode == "Community (Topic)":
+                        gid = community_map.get(node_id, 0)
+                        node_color = community_colors[gid % len(community_colors)]
+
+                    # re-added font config for white, legible text
+                    nodes.append(Node(
+                        id=node_id, 
+                        label=node_id, 
+                        size=size, 
+                        color=node_color,
+                        font={'color': 'white', 'size': 20, 'strokeWidth': 2, 'strokeColor': '#000000'}
+                    ))
+
+                for (source, target), weight in sorted_connections:
+                    width = 1 + math.log(weight) * 0.8
+                    edges.append(Edge(source=source, target=target, width=width, color="#e0e0e0"))
+                
+                # re-added interaction dict for zoom/pan buttons
+                config = Config(
+                    width=1000, 
+                    height=700, 
+                    directed=directed_graph, 
+                    physics=physics_enabled, 
+                    hierarchy=False, 
+                    interaction={"navigationButtons": True, "zoomView": True}, 
+                    physicsSettings={"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -abs(repulsion_val), "springLength": edge_len_val, "springConstant": 0.05, "damping": 0.4}}
+                )
+                
+                st.info("💡 **Navigation Tip:** Use the buttons in the **bottom-right** of the graph to Zoom & Pan.")
+                agraph(nodes=nodes, edges=edges, config=config)
+                
+                # graph analytics tabs
+                tab_g1, tab_g2, tab_g3, tab_g4 = st.tabs(["Basic Stats", "Top Nodes", "Text Stats", "🔥 Heatmap"])
+                with tab_g1:
+                    col_b1, col_b2, col_b3 = st.columns(3)
+                    col_b1.metric("Nodes", G.number_of_nodes())
+                    col_b2.metric("Edges", G.number_of_edges())
+                    try: col_b3.metric("Density", f"{nx.density(G):.4f}")
+                    except: pass
+                with tab_g2:
+                    node_weights = {n: 0 for n in G.nodes()}
+                    for u, v, data in G.edges(data=True):
+                        w = data.get('weight', 1)
+                        node_weights[u] += w
+                        node_weights[v] += w
+                    st.dataframe(pd.DataFrame(list(node_weights.items()), columns=["Node", "Weighted Degree"]).sort_values("Weighted Degree", ascending=False).head(50), use_container_width=True)
+                with tab_g3:
+                     c1, c2, c3 = st.columns(3)
+                     c1.metric("Total Tokens", f"{text_stats['Total Tokens']:,}")
+                     c2.metric("Unique Vocab", f"{text_stats['Unique Vocabulary']:,}")
+                     c3.metric("Lexical Diversity", f"{text_stats['Lexical Diversity']}")
+                with tab_g4:
+                    # hybrid heatmap-QR generator
+                    viz_mode = st.radio("Visualization Mode", ["Standard Heatmap", "Hybrid Signature (Scanable)"], horizontal=True, label_visibility="collapsed")
+                    
+                    top_20 = [w for w, c in combined_counts.most_common(20)]
+                    
+                    if len(top_20) > 1:
+                        # 1. Generate the Matrix Data
+                        mat = np.zeros((len(top_20), len(top_20)))
+                        for i, w1 in enumerate(top_20):
+                            for j, w2 in enumerate(top_20):
+                                if i != j: mat[i][j] = scanner.global_bigrams.get((w1, w2), 0) + scanner.global_bigrams.get((w2, w1), 0)
+                        
+                        # 2. Plot Heatmap to a PIL Image (Memory Buffer)
+                        fig_h, ax_h = plt.subplots(figsize=(10, 10)) # Square aspect ratio is better for QR
+                        ax_h.imshow(mat, cmap=colormap, interpolation='nearest') # 'nearest' gives distinct blocks
+                        
+                        # Clean up the plot for the "Signature" look (remove axis noise if in QR mode)
+                        if viz_mode == "Hybrid Signature (Scanable)":
+                            ax_h.axis('off')
+                            plt.tight_layout(pad=0)
+                        else:
+                            ax_h.set_xticks(np.arange(len(top_20)))
+                            ax_h.set_yticks(np.arange(len(top_20)))
+                            ax_h.set_xticklabels(top_20, rotation=45, ha="right")
+                            ax_h.set_yticklabels(top_20)
+                        
+                        # Save Matplotlib fig to PIL Object
+                        buf = BytesIO()
+                        fig_h.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+                        buf.seek(0)
+                        
+                        if viz_mode == "Standard Heatmap":
+                            st.pyplot(fig_h)
+                        
+                        elif viz_mode == "Hybrid Signature (Scanable)":
+                            if qrcode is None:
+                                st.error("🚨 Please install: `pip install qrcode[pil]`")
+                            else:
+                                from PIL import Image, ImageEnhance
+                                
+                                # A. Prepare the Heatmap (The "Artistic Background")
+                                heatmap_img = Image.open(buf).convert("RGBA")
+                                
+                                # Brighten heatmap so dark QR dots stand out against it
+                                enhancer = ImageEnhance.Brightness(heatmap_img)
+                                heatmap_img = enhancer.enhance(1.5) 
+                                
+                                # B. Generate the QR (The "Data Layer")
+                                signature_payload = (
+                                    f"SIGNAL FOUNDRY\nRef: {st.session_state.get('last_sketch_hash', 'SESSION')}\n"
+                                    f"Top: {', '.join(top_20[:3])}"
+                                )
+                                qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=1)
+                                qr.add_data(signature_payload)
+                                qr.make(fit=True)
+                                
+                                # Create QR image: Black Data, Transparent Background
+                                qr_img = qr.make_image(fill_color="black", back_color="transparent").convert("RGBA")
+                                
+                                # C. Composite (Merge)
+                                # Resize heatmap to match QR exactly
+                                heatmap_resized = heatmap_img.resize(qr_img.size)
+                                
+                                # Overlay: The Heatmap is the "Paper", the QR is the "Ink"
+                                # We create a new image combining them
+                                hybrid_img = Image.alpha_composite(heatmap_resized, qr_img)
+                                
+                                c1, c2 = st.columns([2, 1])
+                                with c1:
+                                    st.image(hybrid_img, caption="Scan this Heatmap to verify analysis data.", use_container_width=True)
+                                with c2:
+                                    st.markdown("### 🧬 Hybrid Signature")
+                                    st.info("The colors represent the data relationships (Heatmap). The dark overlay pattern encodes the document metadata (QR).")
+                                    
+                                    # Convert hybrid to bytes for download
+                                    final_buf = BytesIO()
+                                    hybrid_img.save(final_buf, format="PNG")
+                                    st.download_button("📥 Download Signature", final_buf.getvalue(), "heatmap_signature.png", "image/png")
+                    else:
+                        st.info("Not enough data to generate signature.")
+                    #
+
+        st.subheader("🔍 Bayesian Theme Discovery")
+        if len(scanner.topic_docs) > 5 and DictVectorizer:
+            with st.spinner(f"Running {topic_model_type} Topic Modeling..."):
+                topics = perform_topic_modeling(scanner.topic_docs, n_topics, topic_model_type)
+            if topics:
+                cols = st.columns(len(topics))
+                for idx, topic in enumerate(topics):
+                    with cols[idx]:
+                        st.markdown(f"**Topic {topic['id']}**")
+                        for w in topic['words']: st.markdown(f"`{w}`")
+        else:
+            st.info("Needs more data/docs to model topics.")
+
+        # detailed frequency tables
+        st.divider()
+        st.subheader(f"📊 Frequency Tables (Top {top_n})")
+        most_common = combined_counts.most_common(top_n)
+        data = []
+        if enable_sentiment:
+            for w, f in most_common:
+                score = term_sentiments.get(w, 0.0)
+                category = get_sentiment_category(score, pos_threshold, neg_threshold)
+                data.append([w, f, score, category])
+        else:
+            data = [[w, f] for w, f in most_common]
+
+        cols = ["word", "count"] + (["sentiment", "category"] if enable_sentiment else [])
+        st.dataframe(pd.DataFrame(data, columns=cols), use_container_width=True)
+        
+        if proc_conf.compute_bigrams and scanner.global_bigrams:
+            st.write("Bigrams (By Frequency)")
+            top_bg = scanner.global_bigrams.most_common(top_n)
+            bg_data = []
+            if enable_sentiment:
+                for bg_tuple, f in top_bg:
+                    bg_str = " ".join(bg_tuple)
+                    score = term_sentiments.get(bg_str, 0.0)
+                    category = get_sentiment_category(score, pos_threshold, neg_threshold)
+                    bg_data.append([bg_str, f, score, category])
+            else:
+                bg_data = [[" ".join(bg), f] for bg, f in top_bg]
+            bg_cols = ["bigram", "count"] + (["sentiment", "category"] if enable_sentiment else [])
+            st.dataframe(pd.DataFrame(bg_data, columns=bg_cols), use_container_width=True)
+
+            # NPMI in expander (original style)
+            with st.expander("🔬 Phrase Significance (NPMI Score)", expanded=False):
+                st.markdown("""
+                **NPMI (Normalized Pointwise Mutual Information)** finds words that *belong* together, rather than just words that appear often.
+                *   High Score (> 0.5): Strong association (e.g., "Artificial Intelligence").
+                *   Low Score (< 0.1): Random association (e.g., "of the").
+                """)
+                df_npmi = calculate_npmi(scanner.global_bigrams, combined_counts, scanner.total_rows_processed)
+                st.dataframe(df_npmi.head(top_n), use_container_width=True)
+
+    # --- AI analyst (restored full mode)
+    if combined_counts and st.session_state['authenticated']:
+        st.divider()
+        st.subheader("🤖 AI Analyst")
+        
+        top_u = [w for w, c in combined_counts.most_common(50)]
+        top_b = [" ".join(bg) for bg, c in scanner.global_bigrams.most_common(20)]
+        ai_ctx_str = f"Top Words: {', '.join(top_u)}\nTop Bigrams: {', '.join(top_b)}\nGraph Clusters: {locals().get('ai_cluster_info', 'N/A')}"
+        
+        col_ai_1, col_ai_2 = st.columns(2)
+        
+        with col_ai_1:
+            st.markdown("**1. One-Click Theme Detection**")
+            if st.button("✨ Identify Key Themes", type="primary"):
+                with st.status("Analyzing..."):
+                    system_prompt = "You are a qualitative data analyst. Analyze the provided word frequency lists to identify 3 key themes, potential anomalies, and a summary of the subject matter."
+                    user_prompt = f"Data Context:\n{ai_ctx_str}"
+                    response = call_llm_and_track_cost(system_prompt, user_prompt, ai_config)
+                    st.session_state["ai_response"] = response
+                    st.rerun()
+
+        with col_ai_2:
+            st.markdown("**2. Ask the Data**")
+            user_question = st.text_area("Ask a specific question:", height=100, placeholder="e.g., 'What are the main complaints about pricing?'")
+            if st.button("Ask Question"):
+                if user_question.strip():
+                    with st.status("Thinking..."):
+                        system_prompt = "You are an expert analyst. Answer the user's question based ONLY on the provided summary statistics (word counts and associations). If you cannot answer from the data, say so."
+                        user_prompt = f"Data Context:\n{ai_ctx_str}\n\nUser Question: {user_question}"
+                        response = call_llm_and_track_cost(system_prompt, user_prompt, ai_config)
+                        st.session_state["ai_response"] = f"**Q: {user_question}**\n\n{response}"
+                        st.rerun()
+                else:
+                    st.warning("Please enter a question.")
+
+        if st.session_state["ai_response"]:
+            st.divider()
+            st.markdown("### 📋 AI Output")
+            st.markdown(st.session_state["ai_response"])
 
 st.markdown("---")
 st.markdown(
