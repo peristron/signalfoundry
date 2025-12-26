@@ -70,6 +70,11 @@ except ImportError:
     openpyxl = None
 
 try:
+    from dateutil import parser as date_parser
+except ImportError:
+    date_parser = None
+
+try:
     import pypdf
 except ImportError:
     pypdf = None
