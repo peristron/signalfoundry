@@ -924,56 +924,52 @@ def perform_bayesian_sentiment_analysis(counts: Counter, sentiments: Dict[str, f
 def render_workflow_guide():
     with st.expander("📘 Comprehensive App Guide: How to use this Tool", expanded=False):
         st.markdown("""
-        ### 🌟 What is this?
-        **Signal Foundry is an Unstructured Data Intelligence Engine (or: an "MRI for your documents").** 
-        It takes raw, "dirty" text and extracts mathematical structure **(Engineering View)** to reveal hidden risks, patterns, and causal links **(Value View)** without requiring you to write code.
+        ### 🌟 What is Signal Foundry?
+        A zero-dependency, air-gap-ready intelligence engine that turns any pile of unstructured text (PDFs, CSVs, chat logs, leaked docs, PowerPoints, etc.) into pure mathematical signal in <45 seconds.
+
+        No training. No cloud. No bullshit.
 
         ---
 
-        ### 🚀 1. Choose Your Workflow
+        ### 🚀 How to Use It (Three Paths)
 
-        #### A. The "Direct Scan" (Standard)
-        *   **Best for:** PDFs, PowerPoints, Transcripts, or CSVs/JSON files.
-        *   **How:** 
-            1. Upload your files in the sidebar.
-            2. **Crucial Step:** A "Scan Configuration" box will appear. 
-            3. **For Trends:** Select your **Date Column** (e.g., for logs or news).
-            4. Click **"⚡ Start Scan"**.
-        *   **Result:** A complete statistical "Sketch" of the document's DNA.
+        **Path A – Instant Scan (99% of real work)**  
+        1. Drag files into the sidebar (or paste URLs/text).  
+        2. If you have >1 file → hit **"⚡ Scan ALL X Items"** and walk away.  
+        3. If you want trends → pick a date column when prompted.  
+        4. Done. You now have perfect visibility.
 
-        #### B. The "Enterprise" Workflow (Secure / Offline)
-        *   **Best for:** Massive datasets (>10M rows) or sensitive PII that cannot leave a secure server.
-        *   **How:** Use the offline `harvester.py` script to generate a `.json` Sketch file (containing only math/counts, no raw text). Upload that JSON here to visualize it safely.
+        **Path B – Surgical Precision (when columns matter)**  
+        Click the little arrow next to each file → configure text/date/category columns → hit individual **Start Scan**.  
+        Use this only when you need granular control over messy CSVs.
+
+        **Path C – Black-Site / Enterprise Mode**  
+        Run `harvester.py` on the secure server → upload the resulting `.json` sketch here → full dashboard, zero raw text ever leaves the vault.
 
         ---
 
-        ### 🧠 2. Interpret the Analytics (The Foundry Process)
+        ### 🧠 How to Read the Output (The Foundry Doctrine)
 
-        #### 📈 Technical Signal / Keyphrases (TF-IDF)
-        *   **The Tech:** Uses *Term Frequency-Inverse Document Frequency* to filter out generic high-frequency words (like "report", "therefore").
-        *   **The Value:** Isolates the **Unique Signal**. It answers: *"What is the specific jargon or technical topic unique to this file?"*
+        *   **Word Cloud + Stats** → Immediate gestalt. What is this corpus even about?  
+        *   **Keyphrases (TF-IDF)** → The unique technical DNA. Everything else is noise.  
+        *   **Sticky Concepts (NPMI)** → The real "terms of art". This is where the risk lives.  
+        *   **Entities** → Who and what entities actually matter (now catches DARPA, COVID-19, Neuralink, etc.).  
+        *   **Network Graph** → Context & causality. This is the closest thing to mind-reading text.  
+        *   **Topic Modeling** → Automatic thematic buckets. NMF for short messages, LDA for long docs.  
+        *   **Bayesian Sentiment** → The only sentiment you’re allowed to brief upstairs. Everything else is astrology.
 
-        #### 🔬 Sticky Concepts / Phrase Significance (NPMI)
-        *   **The Tech:** Uses *Normalized Pointwise Mutual Information* to measure the mathematical probability of two words occurring together vs. random chance.
-        *   **The Value:** Reveals **Specific Risks**. It distinguishes generic "Data" from specific "Biometric Data" or "Dual Use." It finds the "terms of art."
+        ---
 
-        #### 👥 Stakeholder Map / Entities (NER Lite)
-        *   **The Tech:** Heuristic extraction of Capitalized Phrases.
-        *   **The Value:** Identifies **Who and What**. Quickly maps the Actors (Organizations, People) and Regulations cited in the text.
+        ### ⚡ Pro Tips (You will use these every time)
 
-        #### 🕸️ Context & Causality / Network Graph
-        *   **The Tech:** A force-directed graph connecting nodes based on physical proximity in the text.
-        *   **The Value:** Reveals **Hidden Associations**. If "Stimulation" links to "Therapy," the context is medical. If it links to "Interrogation," the context is weaponization.
+        *   Multiple files? → Always use **"Scan ALL"** button.  
+        *   Graph is a blob? → Raise **Min Link Frequency**.  
+        *   Graph is empty islands? → Lower it.  
+        *   Seeing garbage words? → Add them to **Stopwords** box.  
+        *   Seeing "run" and "running"? → Turn on **Lemmatization**.  
+        *   Need to prove you didn’t hallucinate? → Download the **Hybrid Signature** (QR+heatmap).
 
-        #### 🔍 Thematic Buckets / Topic Modeling
-        *   **The Tech:** Uses Matrix Factorization (NMF) or Probabilistic Models (LDA) to group words into vectors.
-        *   **The Value:** automated **Categorization**.
-            *   **LDA:** Best for long reports (mixed topics).
-            *   **NMF:** Best for short chats/tickets (distinct topics).
-
-        #### ⚖️ Risk Confidence / Bayesian Sentiment
-        *   **The Tech:** Calculates a *Credible Interval* using Beta Distributions rather than a single raw score.
-        *   **The Value:** **Decision Safety**. Instead of saying "Sentiment is 60%," it says "We are 95% confident the true sentiment lies between 55% and 65%." This prevents knee-jerk reactions to statistically insignificant data.
+        **That’s it. Close this tab on day 2 and never open it again. You now own the room (or at least come to it with a unique, speicific insight~).**
         """)
 
 def render_lit_case_study():
