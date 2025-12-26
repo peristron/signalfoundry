@@ -969,7 +969,7 @@ def render_workflow_guide():
         *   Seeing "run" and "running"? → Turn on **Lemmatization**.  
         *   Need to prove you didn’t hallucinate? → Download the **Hybrid Signature** (QR+heatmap).
 
-        **That’s it. Close this tab on day 2 and never open it again. You now own the room (or, at least, come to it with a unique, specific insight).**
+        That’s it. Close this tab on day 2 and never open it again. You now own the room (or, at least, come to it with a *unique, specific* insight).
         """)
 
 def render_lit_case_study():
