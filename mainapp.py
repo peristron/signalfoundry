@@ -703,6 +703,10 @@ def process_chunk_iter(
     _stopwords = proc_conf.stopwords
     _lemma = proc_conf.use_lemmatization and (lemmatizer is not None)
     
+    # Define a set of "edge junk" to strip (quotes, brackets, dashes)
+    # This catches "word" or (word) or -word-
+    _strip_chars = string.punctuation + "“”‘’–—" 
+    
     local_global_counts = Counter()
     local_global_bigrams = Counter() if proc_conf.compute_bigrams else Counter()
     
@@ -727,14 +731,18 @@ def process_chunk_iter(
         # tokenization & filter
         filtered_tokens_line: List[str] = []
         for t in text.split():
+            # 1. Internal Translation (removes internal chars like don't -> dont)
             t = t.translate(_trans)
+            
+            # 2. Edge Stripping (The Fix for "between and operations")
+            t = t.strip(_strip_chars)
+            
             if not t: continue
             if _drop_int and t.isdigit(): continue
             if len(t) < _min_len: continue
             
             # lemmatize?
             if _lemma:
-                # naive lemmatization (check if verb first, then noun) covers most bases without full part-of-speech tagging overhead
                 t = lemmatize(t, pos='v')
                 t = lemmatize(t, pos='n')
             
