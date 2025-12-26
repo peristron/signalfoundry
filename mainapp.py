@@ -1132,15 +1132,27 @@ def render_use_cases():
         *   Providing instructors with actionable summaries for targeted intervention.
         """)
 
-
 def render_analyst_help():
-    with st.expander("🎓 Analyst's Guide", expanded=False):
+    with st.expander("🎓 Analyst's Guide & Troubleshooting", expanded=False):
         st.markdown("""
-        **Symptom: Graph vs. Topics Disagree**
-        *   **Fix:** Check for 'bridge' words. Lower 'Rows per Document' to 1.
+        **Symptom: The Network Graph is a "Giant Blob"**
+        *   **Fix:** Increase **'Min Link Frequency'** (Slider) to cut weak ties.
+        *   **Fix:** Increase **'Repulsion'** (Physics) to push nodes apart.
         
-        **Symptom: Giant Blob Graph**
-        *   **Fix:** Increase 'Min Link Frequency'.
+        **Symptom: The Graph has "Disconnected Islands"**
+        *   **Fix:** Decrease **'Min Link Frequency'** to reveal subtle connections.
+        *   **Fix:** Increase **'Edge Length'** to allow clusters to breathe.
+        
+        **Symptom: Seeing duplicates (e.g., "run" and "running")**
+        *   **Fix:** Enable **'Use Lemmatization'** in the sidebar. This merges word variations into their root form (lemma).
+        
+        **Symptom: Topics look like "gibberish" or random words**
+        *   **Fix:** Check **'Rows per Document'**. 
+            *   For **Chat Logs/Tweets**, keep it low (1-5).
+            *   For **Books/Reports**, increase it (50-100) so the engine understands the "context window."
+        
+        **Symptom: High-ranking words are boring (e.g., "page", "copyright")**
+        *   **Fix:** These are "Corpus Artifacts." Add them to the **Stopwords** list in the sidebar to reveal the true signal underneath.
         """)
 
 # visualization helpers
