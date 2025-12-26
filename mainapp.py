@@ -925,7 +925,7 @@ def render_workflow_guide():
     with st.expander("📘 Comprehensive App Guide: How to use this Tool", expanded=False):
         st.markdown("""
         ### 🌟 What is Signal Foundry?
-        A zero-dependency, air-gap-ready intelligence engine that turns any pile of unstructured text (PDFs, CSVs, chat logs, obscure docs, PowerPoints, etc.) into pure mathematical signal in <45 seconds.
+        A zero-dependency, air-gap-ready intelligence engine that turns any pile of unstructured text (PDFs, CSVs, chat logs, leaked docs, PowerPoints, etc.) into pure mathematical signal in <45 seconds.
 
         No training. No cloud. No b*llshit~
 
@@ -943,7 +943,7 @@ def render_workflow_guide():
         Click the little arrow next to each file → configure text/date/category columns → hit individual **Start Scan**.  
         Use this only when you need granular control over messy CSVs.
 
-        **Path C – Grey-Site / Enterprise Mode**  
+        **Path C – Black-Site / Enterprise Mode**  
         Run `harvester.py` on the secure server → upload the resulting `.json` sketch here → full dashboard, zero raw text ever leaves the vault.
 
         ---
@@ -967,9 +967,9 @@ def render_workflow_guide():
         *   Graph is empty islands? → Lower it.  
         *   Seeing garbage words? → Add them to **Stopwords** box.  
         *   Seeing "run" and "running"? → Turn on **Lemmatization**.  
-        *   Need to prove you didn’t hallucinate? → Download the **Hybrid Signature** (QR+heatmap).
+        *   **Need a "Chain of Custody"?** → Download the **Hybrid Signature** (QR+Heatmap). It encodes the file's unique cryptographic hash into the visualization. It proves this analysis is grounded in *this* specific document, and not an AI hallucination.
 
-        That’s it. Close this tab on day 2 and never open it again. You now own the room (or, at least, come to it with a *unique, specific* insight).
+        **That’s it. Close this tab on day 2 and never open it again. You now own the room (or at least come into it with a unique, specific insight~).**
         """)
 
 def render_lit_case_study():
