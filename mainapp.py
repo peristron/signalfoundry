@@ -1427,6 +1427,62 @@ with tab_work:
     if all_inputs:
         st.subheader("🚀 Scanning Phase")
         
+        # --- NEW BATCH SCANNER ---
+        # Only show this big button if we have more than 1 file/url
+        if len(all_inputs) > 1:
+            if st.button(f"⚡ Scan ALL {len(all_inputs)} Items (Batch)", type="primary"):
+                # 1. Handle Reset Logic based on user checkbox
+                if clear_on_scan: 
+                    reset_sketch()
+                
+                # 2. Setup Progress
+                prog_bar = st.progress(0)
+                status_box = st.empty()
+                
+                # 3. Iterate through all files
+                for i, item in enumerate(all_inputs):
+                    status_box.markdown(f"**Processing {i+1}/{len(all_inputs)}:** *{item.name}*...")
+                    
+                    # Detect format
+                    f_bytes = item.getvalue()
+                    fname = item.name.lower()
+                    
+                    # Logic to pick the reader (Simplified detection for batch mode)
+                    batch_iter = iter([])
+                    if fname.endswith(".csv"):
+                        # In batch mode, we try to auto-detect text columns or fallback to raw
+                        # This is a trade-off: Batch mode is faster but less granular config than single mode
+                        headers = detect_csv_headers(f_bytes)
+                        if headers:
+                            batch_iter = read_rows_csv_structured(f_bytes, "auto", ",", True, [headers[0]], None, None, " ")
+                        else:
+                            batch_iter = read_rows_raw_lines(f_bytes)
+                    elif fname.endswith(".xlsx"):
+                        sheets = get_excel_sheetnames(f_bytes)
+                        if sheets:
+                            batch_iter = iter_excel_structured(f_bytes, sheets[0], True, ["col_0"], None, None, " ")
+                    elif fname.endswith(".pdf"):
+                        batch_iter = read_rows_pdf(f_bytes)
+                    elif fname.endswith(".pptx"):
+                        batch_iter = read_rows_pptx(f_bytes)
+                    elif fname.endswith(".vtt"):
+                        batch_iter = read_rows_vtt(f_bytes)
+                    elif fname.endswith(".json"):
+                        batch_iter = read_rows_json(f_bytes)
+                    else:
+                        batch_iter = read_rows_raw_lines(f_bytes)
+                        
+                    # Process
+                    process_chunk_iter(batch_iter, clean_conf, proc_conf, st.session_state['sketch'], lemmatizer)
+                    
+                    # Update Progress
+                    prog_bar.progress((i + 1) / len(all_inputs))
+                
+                status_box.success(f"✅ Batch Complete! Processed {len(all_inputs)} files.")
+                st.rerun()
+        # -------------------------
+
+        # EXISTING INDIVIDUAL SCANNER (Kept for granular control)
         for idx, f in enumerate(all_inputs):
             try:
                 # resource limit check
@@ -1452,12 +1508,12 @@ with tab_work:
                     "json_key": None
                 }
                 
-                with st.expander(f"🧩 Config: {fname}", expanded=True):
+                with st.expander(f"🧩 Config: {fname}", expanded=False): # Collapsed by default to save space
                     if is_csv:
                         headers = detect_csv_headers(file_bytes)
                         if headers:
                             scan_settings["has_header"] = True
-                            st.info(f"Detected {len(headers)} columns.")
+                            # st.info(f"Detected {len(headers)} columns.") # Reduced noise
                             scan_settings["text_cols"] = st.multiselect("Text Columns", headers, default=[headers[0]], key=f"txt_{idx}")
                             scan_settings["date_col"] = st.selectbox("Date Column (Optional)", ["(None)"] + headers, key=f"date_{idx}")
                             scan_settings["cat_col"] = st.selectbox("Category Column (Optional)", ["(None)"] + headers, key=f"cat_{idx}")
@@ -1474,7 +1530,7 @@ with tab_work:
                     elif is_json:
                         scan_settings["json_key"] = st.text_input("JSON Key (Optional)", "", key=f"json_{idx}")
 
-                if st.button(f"⚡ Start Scan: {fname}", key=f"btn_{idx}"):
+                if st.button(f"Start Scan: {fname}", key=f"btn_{idx}"):
                     if clear_on_scan: reset_sketch()
                     bar = st.progress(0)
                     status = st.empty()
@@ -1512,7 +1568,7 @@ with tab_work:
                     if not clear_on_scan: st.rerun()
 
             except Exception as e:
-                st.error(f"Error: {e}")
+                st.error(f"Error processing {f.name}: {e}")
 
     # --- analysis phase
 
