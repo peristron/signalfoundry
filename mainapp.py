@@ -120,8 +120,18 @@ URL_EMAIL_RE = re.compile(
     r'|(?:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
     flags=re.IGNORECASE
 )
-# NER lite pattern (capitalized words in sequence)
-NER_CAPS_RE = re.compile(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b')
+# was NER lite pattern (capitalized words in sequence)
+# NER Pattern: matches 3 types of entities:
+# acronyms (2+ Uppercase): DARPA, EU, NATO
+# complex IDs (Cap start + digits/hyphens): COVID-19, Mi-6, G-7
+# standard proper nouns (title case phrases): John Doe, Project Gutenberg
+NER_CAPS_RE = re.compile(
+    r'\b(?:'
+    r'[A-Z]{2,}'                         # acronyms (DARPA)
+    r'|[A-Z][a-zA-Z0-9-]*\d[a-zA-Z0-9-]*' # complex IDs (COVID-19)
+    r'|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*'    # standard names (John Doe)
+    r')\b'
+)
 
 # logger setup
 logging.basicConfig(level=logging.INFO)
