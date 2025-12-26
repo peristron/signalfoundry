@@ -1182,9 +1182,27 @@ analyzer, lemmatizer = setup_nlp_resources()
 # --- sidebar
 with st.sidebar:
     st.header("📂 Data Input")
+    # ... inside st.sidebar ...
+    st.header("📂 Data Input")
     uploaded_files = st.file_uploader("Upload Files", type=["csv", "xlsx", "vtt", "txt", "json", "pdf", "pptx"], accept_multiple_files=True)
+    
+    # --modfified logic
+    
+    # checking if there's currently data
+    has_data = st.session_state['sketch'].total_rows_processed > 0
+    
+    # showing the checkbox
     clear_on_scan = st.checkbox("Clear previous data", value=False)
+    
+    # 'banner' logic: only showing if there's ambiguity
+    if has_data and not clear_on_scan:
+        st.info("⚠️ **Additive Mode Active:** New scans will be ADDED to current results. Check the box above to Start Fresh.", icon="ℹ️")
+    elif has_data and clear_on_scan:
+        st.caption("✅ Next scan will overwrite current data.")
+        
     if st.button("🗑️ Reset All"): reset_sketch(); st.rerun()
+    
+    # --end
     
     st.divider()
     with st.expander("🌐 Web/Text Import"):
