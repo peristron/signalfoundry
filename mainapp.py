@@ -1182,8 +1182,6 @@ analyzer, lemmatizer = setup_nlp_resources()
 # --- sidebar
 with st.sidebar:
     st.header("📂 Data Input")
-    # ... inside st.sidebar ...
-    st.header("📂 Data Input")
     uploaded_files = st.file_uploader("Upload Files", type=["csv", "xlsx", "vtt", "txt", "json", "pdf", "pptx"], accept_multiple_files=True)
     
     # --modfified logic
