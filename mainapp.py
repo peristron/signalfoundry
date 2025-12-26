@@ -637,21 +637,28 @@ def excel_estimate_rows(file_bytes: bytes, sheet_name: str, has_header: bool) ->
 
 # ⚙️ processing logic
 # ==========================================
-
 def clean_date_str(raw: Any) -> Optional[str]:
-    """Tries to extract a YYYY-MM-DD string from raw input."""
+    """Robust extraction using dateutil if available, falling back to regex."""
     if not raw: return None
     s = str(raw).strip()
-    # somelightweight heuristics for ISO-like dates or standard formats
-    # match YYYY-MM-DD
+    
+    # tries smart parsing (covers "Jan 5, 2024", "2024/01/01", etc)
+    if date_parser:
+        try:
+            # fuzzy=True allows extracting dates buried in strings like "Date: Jan 1"
+            dt = date_parser.parse(s, fuzzy=True)
+            return dt.strftime("%Y-%m-%d")
+        except (ValueError, OverflowError):
+            pass # falls through to regex if dateutil fails
+
+    # the fallback Regex (simple ISO & US formats)
     match = re.search(r'\d{4}-\d{2}-\d{2}', s)
     if match: return match.group(0)
-    # match MM/DD/YYYY
     match_us = re.search(r'(\d{1,2})/(\d{1,2})/(\d{4})', s)
     if match_us:
-        # convert to ISO for sorting
         m, d, y = match_us.groups()
         return f"{y}-{int(m):02d}-{int(d):02d}"
+    
     return None
 
 def apply_text_cleaning(text: str, config: CleaningConfig) -> str:
