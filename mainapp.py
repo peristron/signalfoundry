@@ -1394,10 +1394,10 @@ with st.sidebar:
         help="The number of distinct themes the AI should attempt to find."
     )
 
-# --- TABS LAYOUT ---
+# -tabs layout
 tab_work, tab_learn = st.tabs(["🚀 Workspace", "📚 Learn (How to Use & Use-Cases)"])
 
-# 1. THE LEARNING TAB (Guides & Examples)
+# learning tab (guide and use-cases/examples
 with tab_learn:
     render_workflow_guide()
     render_use_cases()
@@ -1405,7 +1405,7 @@ with tab_learn:
     render_lit_case_study()
     render_analyst_help()
 
-# 2. THE WORKSPACE TAB (Main Engine)
+# workspace tab, main 'engine'
 with tab_work:
     with st.expander("🛠️ Data Refinery"):
         ref_file = st.file_uploader("CSV to Refine", type=['csv'])
@@ -1431,27 +1431,27 @@ with tab_work:
         # Only show this big button if we have more than 1 file/url
         if len(all_inputs) > 1:
             if st.button(f"⚡ Scan ALL {len(all_inputs)} Items (Batch)", type="primary"):
-                # 1. Handle Reset Logic based on user checkbox
+                # to handle the reset logic based on user checkbox
                 if clear_on_scan: 
                     reset_sketch()
                 
-                # 2. Setup Progress
+                # setup progress
                 prog_bar = st.progress(0)
                 status_box = st.empty()
                 
-                # 3. Iterate through all files
+                # to go through all files
                 for i, item in enumerate(all_inputs):
                     status_box.markdown(f"**Processing {i+1}/{len(all_inputs)}:** *{item.name}*...")
                     
-                    # Detect format
+                    # detect format
                     f_bytes = item.getvalue()
                     fname = item.name.lower()
                     
-                    # Logic to pick the reader (Simplified detection for batch mode)
+                    # the logic to pick the reader (simplified detection for batch mode)
                     batch_iter = iter([])
                     if fname.endswith(".csv"):
-                        # In batch mode, we try to auto-detect text columns or fallback to raw
-                        # This is a trade-off: Batch mode is faster but less granular config than single mode
+                        # in batch mode, tries to auto-detect text columns or fallback to raw
+                        # batch mode is faster but less granular config than single mode
                         headers = detect_csv_headers(f_bytes)
                         if headers:
                             batch_iter = read_rows_csv_structured(f_bytes, "auto", ",", True, [headers[0]], None, None, " ")
@@ -1472,17 +1472,17 @@ with tab_work:
                     else:
                         batch_iter = read_rows_raw_lines(f_bytes)
                         
-                    # Process
+                    # process
                     process_chunk_iter(batch_iter, clean_conf, proc_conf, st.session_state['sketch'], lemmatizer)
                     
-                    # Update Progress
+                    # update progress
                     prog_bar.progress((i + 1) / len(all_inputs))
                 
                 status_box.success(f"✅ Batch Complete! Processed {len(all_inputs)} files.")
                 st.rerun()
         # -------------------------
 
-        # EXISTING INDIVIDUAL SCANNER (Kept for granular control)
+        # individual scanner funtionality==================            
         for idx, f in enumerate(all_inputs):
             try:
                 # resource limit check
@@ -1498,7 +1498,7 @@ with tab_work:
                 is_pdf = lower.endswith(".pdf")
                 is_pptx = lower.endswith(".pptx")
                 
-                # Default Scan Settings
+                # default scan settings
                 scan_settings = {
                     "date_col": None,
                     "cat_col": None,
