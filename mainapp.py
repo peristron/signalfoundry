@@ -1368,7 +1368,7 @@ with st.sidebar:
     )
 
 # --- TABS LAYOUT ---
-tab_work, tab_learn = st.tabs(["🚀 Workspace", "📚 Learn (How to Use this app & Use-Cases"])
+tab_work, tab_learn = st.tabs(["🚀 Workspace", "📚 Learn (How to Use this app & Use-Cases)"])
 
 # 1. THE LEARNING TAB (Guides & Examples)
 with tab_learn:
