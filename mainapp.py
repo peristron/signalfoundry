@@ -1403,8 +1403,8 @@ with tab_learn:
 
 # 2. THE WORKSPACE TAB (Main Engine)
 with tab_work:
-    with st.expander("🛠️ Data Refinery"):
-        ref_file = st.file_uploader("CSV to Refine", type=['csv'])
+    with st.expander("🛠️ Data Refinery (only if you need to split very large data files; **NOTE: sanitize first**)"):
+        ref_file = st.file_uploader("CSV to Refine/split", type=['csv'])
         if ref_file and st.button("🚀 Run Refinery"):
             zip_data = perform_refinery_job(ref_file, 50000, clean_conf)
             if zip_data: st.download_button("Download ZIP", zip_data, "refined.zip", "application/zip")
