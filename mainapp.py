@@ -1633,6 +1633,12 @@ with tab_work:
 
         with tab_ent:
             st.markdown("#### Top Entities (Polymorphic NER)")
+            st.caption(
+                "**What this finds:** Stakeholders (Who) and Systems (What). "
+                "This engine adapts to capture **Standard Names** (e.g., 'John Doe'), "
+                "**Acronyms** (e.g., 'DARPA'), and **Technical IDs** (e.g., 'COVID-19' or 'F-35')."
+            )
+            
             if scanner.entity_counts:
                 ent_df = pd.DataFrame(scanner.entity_counts.most_common(50), columns=["Entity", "Count"])
                 st.dataframe(ent_df, use_container_width=True)
