@@ -1310,7 +1310,7 @@ with st.sidebar:
     if use_lemma and lemmatizer is None: st.warning("NLTK Lemmatizer not found.")
     
     proc_conf = ProcessingConfig(
-        min_word_len=st.slider("Min Word Len", 1, 10, 2),
+        min_word_len=st.slider("Min Word Len", 1, 10, 4),
         drop_integers=st.checkbox("Drop Integers", True),
         compute_bigrams=st.checkbox("Bigrams", True),
         use_lemmatization=use_lemma,
