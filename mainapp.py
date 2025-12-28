@@ -938,7 +938,7 @@ def render_workflow_guide():
         ### 🌟 What is Signal Foundry?
         A zero-dependency, air-gap-ready intelligence engine that turns any pile of unstructured text (PDFs, CSVs, chat logs, leaked docs, PowerPoints, etc.) into pure mathematical signal in <45 seconds.
 
-        No training. No cloud. No b*llshit~
+        No training. No cloud (well: *little* cloud). No b*llshit~
 
         ---
 
