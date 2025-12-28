@@ -1616,10 +1616,30 @@ with tab_work:
             st.download_button("📥 download combined png", fig_to_png_bytes(fig), "combined_wc.png", "image/png")
             
             c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Total Tokens", f"{text_stats['Total Tokens']:,}")
-            c2.metric("Unique Vocab", f"{text_stats['Unique Vocabulary']:,}")
-            c3.metric("Docs/Rows", f"{text_stats['Total Rows']:,}")
-            c4.metric("Lexical Diversity", f"{text_stats['Lexical Diversity']}")
+            
+            c1.metric(
+                "Total Tokens", 
+                f"{text_stats['Total Tokens']:,}",
+                help="The total count of all words processed after cleaning (removing stopwords, numbers, etc.). Represents the sheer volume of signal."
+            )
+            
+            c2.metric(
+                "Unique Vocab", 
+                f"{text_stats['Unique Vocabulary']:,}",
+                help="The count of distinct, unique words found. A higher number indicates a broader range of topics or more complex language."
+            )
+            
+            c3.metric(
+                "Docs/Rows", 
+                f"{text_stats['Total Rows']:,}",
+                help="The number of individual processing units (e.g., rows in a CSV, paragraphs in a PDF, or lines in a transcript)."
+            )
+            
+            c4.metric(
+                "Lexical Diversity", 
+                f"{text_stats['Lexical Diversity']}",
+                help="The Ratio of Unique Words to Total Words (Unique / Total). \n\n• High (>0.5): Dense information, varied vocabulary (e.g., Poetry, Abstracts).\n• Low (<0.1): Highly repetitive, consistent language (e.g., Logs, Legal Boilerplate)."
+            )
 
         with tab_trend:
             if scanner.temporal_counts:
