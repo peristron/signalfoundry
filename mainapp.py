@@ -1260,7 +1260,9 @@ with st.sidebar:
         manual_input = st.text_area("Manual Text")
         
     st.divider()
-    st.header("🔐 AI Setup")
+    st.divider()
+    st.header("🔐 AI Setup", help="This AI feature reads *metadata only*. It does not upload raw document text to the cloud provider.")
+    
     if st.session_state['authenticated']:
         st.success("Unlocked")
         with st.expander("🤖 Provider Settings", expanded=True):
