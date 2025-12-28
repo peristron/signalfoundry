@@ -680,13 +680,24 @@ def clean_date_str(raw: Any) -> Optional[str]:
 
 def apply_text_cleaning(text: str, config: CleaningConfig) -> str:
     if not isinstance(text, str): return ""
+    
+    # to fix "sticky acronyms" (e.g., "WHOrecommended" -> "WHO recommended")
+    # to split cases where PDF extraction glued a header to the next word
+    # logic: 2+ CAPS followed by 2+ lowercase letters
+    # use {2,} for the lowercase part to protect plurals like "PDFs" or "CEOs" from being split
+    text = re.sub(r'([A-Z]{2,})([a-z]{2,})', r'\1 \2', text)
+
+    # standard cleaning
     if config.remove_chat: text = CHAT_ARTIFACT_RE.sub(" ", text)
     if config.remove_html: text = HTML_TAG_RE.sub(" ", text)
     if config.unescape:
         try: text = html.unescape(text)
         except: pass
     if config.remove_urls: text = URL_EMAIL_RE.sub(" ", text)
+    
+    # normalizing
     text = text.lower()
+    
     if config.phrase_pattern: text = config.phrase_pattern.sub(" ", text)
     return text.strip()
 
@@ -704,8 +715,8 @@ def process_chunk_iter(
     _stopwords = proc_conf.stopwords
     _lemma = proc_conf.use_lemmatization and (lemmatizer is not None)
     
-    # Define a set of "edge junk" to strip (quotes, brackets, dashes)
-    # This catches "word" or (word) or -word-
+    # defines set of "edge junk" to strip (quotes, brackets, dashes)
+    # to catch "word" or (word) or -word-
     _strip_chars = string.punctuation + "“”‘’–—" 
     
     local_global_counts = Counter()
