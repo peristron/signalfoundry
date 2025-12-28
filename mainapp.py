@@ -1261,7 +1261,7 @@ with st.sidebar:
         
     st.divider()
     st.divider()
-    st.header("🔐 AI Setup", help="This AI feature reads *metadata only*. It does not upload raw document text to the cloud provider.")
+    st.header("🔐 AI Setup", help="This AI feature reads the *metadata only*; it does not upload raw document text to the cloud provider, nor does it 'read' it.")
     
     if st.session_state['authenticated']:
         st.success("Unlocked")
