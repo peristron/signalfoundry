@@ -1734,15 +1734,38 @@ with tab_work:
         show_graph = proc_conf.compute_bigrams and scanner.global_bigrams and st.checkbox("🕸️ Show Network Graph & Advanced Analytics", value=True)
         if show_graph:
             st.subheader("🔗 Network Graph")
+        if show_graph:
+            st.subheader("🔗 Network Graph")
             with st.expander("🛠️ Graph Settings & Physics", expanded=False):
                 c1, c2, c3 = st.columns(3)
-                min_edge_weight = c1.slider("Min Link Frequency", 2, 100, 2)
-                max_nodes_graph = c1.slider("Max Nodes", 10, 200, 80)
-                repulsion_val = c2.slider("Repulsion", 100, 3000, 1000)
-                edge_len_val = c2.slider("Edge Length", 50, 500, 250)
-                physics_enabled = c3.checkbox("Enable Physics", True)
-                directed_graph = c3.checkbox("Directed Arrows", False)
-                color_mode = c3.radio("Color By:", ["Community (Topic)", "Sentiment"], index=0)
+                min_edge_weight = c1.slider(
+                    "Min Link Frequency", 2, 100, 2, 
+                    help="Minimum shared occurrences required to draw a line. Increase this to remove weak connections and 'de-clutter' the graph."
+                )
+                max_nodes_graph = c1.slider(
+                    "Max Nodes", 10, 200, 80, 
+                    help="Hard limit on the number of words displayed. Lower this to focus only on the absolute most vital connections."
+                )
+                repulsion_val = c2.slider(
+                    "Repulsion", 100, 3000, 1000, 
+                    help="Physics Force: How strongly nodes push away from each other. Increase this if the graph looks like a tight ball."
+                )
+                edge_len_val = c2.slider(
+                    "Edge Length", 50, 500, 250, 
+                    help="Target length for the connecting lines. Increase this to space out distinct clusters."
+                )
+                physics_enabled = c3.checkbox(
+                    "Enable Physics", True, 
+                    help="If checked, the graph simulates gravity to organize itself. Uncheck to freeze the nodes in place."
+                )
+                directed_graph = c3.checkbox(
+                    "Directed Arrows", False, 
+                    help="Draws arrows (->) to show word order/flow, rather than just simple connections."
+                )
+                color_mode = c3.radio(
+                    "Color By:", ["Community (Topic)", "Sentiment"], index=0, 
+                    help="Community: Colors nodes by their calculated structural cluster.\nSentiment: Colors nodes Red (Negative) or Green (Positive)."
+                )
 
             G = nx.DiGraph() if directed_graph else nx.Graph()
             filtered_bigrams = {k: v for k, v in scanner.global_bigrams.items() if v >= min_edge_weight}
