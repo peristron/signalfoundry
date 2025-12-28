@@ -1236,7 +1236,7 @@ with st.sidebar:
     
     # 'banner' logic: only showing if there's ambiguity
     if has_data and not clear_on_scan:
-        st.info("⚠️ **Additive Mode Active:** New scans will be ADDED to current results. Check the "Clear previous data" check-box above to start fresh", icon="ℹ️")
+        st.info("⚠️ **Additive Mode Active:** New scans will be ADDED to current results. Check the 'Clear previous data' check-box above to start fresh", icon="ℹ️")
     elif has_data and clear_on_scan:
         st.caption("✅ Next scan will overwrite current data.")
         
