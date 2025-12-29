@@ -1591,13 +1591,46 @@ with tab_work:
 
     # --- analysis phase
 
+    # --- analysis phase
+
     scanner = st.session_state['sketch']
 
-    # now: dynamic filtering with VISUALIZATION FIX (Instant Update)
+    # [NEW] Time-Travel Logic
+    counts_source = scanner.global_counts
+    
+    if scanner.temporal_counts:
+        all_dates = sorted(scanner.temporal_counts.keys())
+        if len(all_dates) > 1:
+            st.divider()
+            st.subheader("⏳ Time-Travel Filter")
+            
+            # Create the slider
+            start_date, end_date = st.select_slider(
+                "Filter Analysis by Timeframe",
+                options=all_dates,
+                value=(all_dates[0], all_dates[-1])
+            )
+            
+            # if user moves the slider, reconstruct counts from the specific dates
+            if (start_date != all_dates[0]) or (end_date != all_dates[-1]):
+                subset_counts = Counter()
+                # to iterate through dates in range
+                in_range = False
+                for d in all_dates:
+                    if d == start_date: in_range = True
+                    if in_range:
+                        subset_counts.update(scanner.temporal_counts[d])
+                    if d == end_date: break
+                
+                counts_source = subset_counts
+                st.caption(f"Showing data from **{start_date}** to **{end_date}**")
+
+    # now: dynamic filtering with visualization fix
     combined_counts = Counter({
-        k: v for k, v in scanner.global_counts.items() 
+        k: v for k, v in counts_source.items() 
         if len(str(k)) >= proc_conf.min_word_len
-        and k not in proc_conf.stopwords # <--- Dynamic filtering
+        and k not in proc_conf.stopwords # dynamic filtering
+    })
     })
 
     if combined_counts:
