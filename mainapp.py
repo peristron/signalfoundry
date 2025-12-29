@@ -1302,7 +1302,7 @@ with st.sidebar:
                 st.session_state['total_cost'] = 0.0
                 st.session_state['total_tokens'] = 0
                 st.rerun()
-    if st.button("Logout"): logout(); st.rerun()
+        if st.button("Logout"): logout(); st.rerun()
     else:
         st.text_input("Password", type="password", key="password_input", on_change=perform_login)
         if st.session_state['auth_error']: st.error("Incorrect password")
@@ -1591,8 +1591,6 @@ with tab_work:
 
     # --- analysis phase
 
-    # --- analysis phase
-
     scanner = st.session_state['sketch']
 
     # [NEW] Time-Travel Logic
@@ -1630,7 +1628,6 @@ with tab_work:
         k: v for k, v in counts_source.items() 
         if len(str(k)) >= proc_conf.min_word_len
         and k not in proc_conf.stopwords # dynamic filtering
-    })
     })
 
     if combined_counts:
@@ -1739,10 +1736,8 @@ with tab_work:
                 st.dataframe(ent_df, use_container_width=True)
                 
                 # simple entity cloud (safety wrapped)
-                
-                # simple entity cloud (safety wrapped)
                 try:
-                    fig_e, _ = build_wordcloud_figure_from_counts(scanner.entity_counts, 100, 800, 400, "#111111", "Pastel1", combined_font_path, 42, None)
+                    fig_e, _ = build_wordcloud_figure_from_counts(refined_entities, 100, 800, 400, "#111111", "Pastel1", combined_font_path, 42, None)
                     st.pyplot(fig_e)
                 except Exception as e:
                     st.warning(f"Could not generate Entity Cloud: {e}")
@@ -1796,8 +1791,6 @@ with tab_work:
                     plt.close(fig_bayes)
 
         show_graph = proc_conf.compute_bigrams and scanner.global_bigrams and st.checkbox("🕸️ Show Network Graph & Advanced Analytics", value=True)
-        if show_graph:
-            st.subheader("🔗 Network Graph")
         if show_graph:
             st.subheader("🔗 Network Graph")
             with st.expander("🛠️ Graph Settings & Physics", expanded=False):
