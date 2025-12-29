@@ -1716,9 +1716,29 @@ with tab_work:
                 "**Acronyms** (e.g., 'DARPA'), and **Technical IDs** (e.g., 'COVID-19' or 'F-35')."
             )
             
-            if scanner.entity_counts:
-                ent_df = pd.DataFrame(scanner.entity_counts.most_common(50), columns=["Entity", "Count"])
+            # smarter ratio filter
+            # if "apple" (fruit) appears 100 times, and "Apple" (entity) appears 2 times, drop it
+            # if "Apple" (Company) appears 100 times, keeps it
+            refined_entities = Counter()
+            for ent, count in scanner.entity_counts.items():
+                lower_k = ent.lower()
+                total_occurrences = scanner.global_counts.get(lower_k, 0)
+                
+                # if word appears in the text, check the ratio
+                if total_occurrences > 0:
+                    capitalization_ratio = count / total_occurrences
+                    # keeps if it's capitalized >30% of the time OR it's a complex ID (digits/hyphens)
+                    if capitalization_ratio > 0.3 or not ent.isalpha():
+                        refined_entities[ent] = count
+                else:
+                    # if not in global_counts (e.g. stopped out), keeps it to be safe
+                    refined_entities[ent] = count
+
+            if refined_entities:
+                ent_df = pd.DataFrame(refined_entities.most_common(50), columns=["Entity", "Count"])
                 st.dataframe(ent_df, use_container_width=True)
+                
+                # simple entity cloud (safety wrapped)
                 
                 # simple entity cloud (safety wrapped)
                 try:
