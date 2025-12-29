@@ -1302,12 +1302,23 @@ with st.sidebar:
                 st.session_state['total_cost'] = 0.0
                 st.session_state['total_tokens'] = 0
                 st.rerun()
-        if st.button("Logout"): logout(); st.rerun()
+    if st.button("Logout"): logout(); st.rerun()
     else:
         st.text_input("Password", type="password", key="password_input", on_change=perform_login)
         if st.session_state['auth_error']: st.error("Incorrect password")
 
     st.divider()
+    
+    # [NEW] Health Check Section
+    with st.expander("❤️ System Health", expanded=False):
+        st.markdown(f"{'✅' if requests else '❌'} **Web Scraper** (requests)")
+        st.markdown(f"{'✅' if pypdf else '❌'} **PDF Support** (pypdf)")
+        st.markdown(f"{'✅' if openpyxl else '❌'} **Excel Support** (openpyxl)")
+        st.markdown(f"{'✅' if pptx else '❌'} **PowerPoint** (python-pptx)")
+        st.markdown(f"{'✅' if nltk else '❌'} **Sentiment** (nltk)")
+        st.markdown(f"{'✅' if LatentDirichletAllocation else '❌'} **Topic Modeling** (sklearn)")
+        st.markdown(f"{'✅' if qrcode else '❌'} **QR Generator** (qrcode)")
+    
     st.header("⚙️ Configuration")
     
     st.markdown("**Cleaning**")
