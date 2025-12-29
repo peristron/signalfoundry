@@ -1893,6 +1893,17 @@ with tab_work:
                 
                 st.info("💡 **Navigation Tip:** Use the buttons in the **bottom-right** of the graph to Zoom & Pan.")
                 agraph(nodes=nodes, edges=edges, config=config)
+
+                # [NEW] Gephi Export
+                if st.button("📥 Download Graph File (.gexf)"):
+                    try:
+                        # Write to memory buffer
+                        gexf_buffer = io.BytesIO()
+                        nx.write_gexf(G, gexf_buffer)
+                        gexf_buffer.seek(0)
+                        st.download_button("Click to Save GEXF", gexf_buffer, "network.gexf", "application/xml")
+                    except Exception as e:
+                        st.error(f"Export failed: {e}")
                 
                 # graph analytics tabs
                 tab_g1, tab_g2, tab_g3, tab_g4 = st.tabs(["Basic Stats", "Top Nodes", "Text Stats", "🔥 Heatmap"])
