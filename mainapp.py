@@ -1902,9 +1902,22 @@ with tab_work:
                 tab_g1, tab_g2, tab_g3, tab_g4 = st.tabs(["Basic Stats", "Top Nodes", "Text Stats", "🔥 Heatmap"])
                 with tab_g1:
                     col_b1, col_b2, col_b3 = st.columns(3)
-                    col_b1.metric("Nodes", G.number_of_nodes())
-                    col_b2.metric("Edges", G.number_of_edges())
-                    try: col_b3.metric("Density", f"{nx.density(G):.4f}")
+                    col_b1.metric(
+                        "Nodes", 
+                        G.number_of_nodes(),
+                        help="The number of unique concepts (dots) currently displayed in the network."
+                    )
+                    col_b2.metric(
+                        "Edges", 
+                        G.number_of_edges(),
+                        help="The number of connections (lines) between concepts. A connection indicates these words appear together frequently."
+                    )
+                    try: 
+                        col_b3.metric(
+                            "Density", 
+                            f"{nx.density(G):.4f}",
+                            help="A score from 0 to 1 indicating how interconnected the network is.\n\n• Low (<0.1): Distinct, separate topics.\n• High (>0.5): Everything is related to everything (a 'hairball')."
+                        )
                     except: pass
                 with tab_g2:
                     node_weights = {n: 0 for n in G.nodes()}
