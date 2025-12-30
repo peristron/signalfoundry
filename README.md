@@ -14,7 +14,7 @@ Unlike traditional NLP tools that require loading entire datasets into RAM, Sign
     Memory Safe: Processes 10M+ rows as easily as 100 rows.
     Stateful Analysis: Pause, resume, and merge scans from multiple files (e.g., combining 12 months of CSV logs into a single analysis).
 
-3. 🧠 Advanced NLP (Batteries Included)
+3. 🧠 Advanced NLP (batteries included~)
 
     Lemmatization: Intelligent merging of word forms (run, running, ran → run) for accurate counting.
     NER Lite: Heuristic-based Named Entity Recognition to identify People, Organizations, and Products without heavy ML models.
