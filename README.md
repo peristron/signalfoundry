@@ -3,75 +3,101 @@ Signal Foundry: The Unstructured Data Intelligence Engine
 Signal Foundry is a lightweight, privacy-first analytics platform designed to extract mathematical structure, temporal trends, and qualitative insights from massive, messy text datasets ("dirty data").
 
 Unlike traditional NLP tools that require loading entire datasets into RAM, Signal Foundry uses a Streaming + Sketching architecture. It reads files in small chunks, extracts statistical summaries (n-grams, entity counts, vocabulary distributions) into a lightweight "Sketch," and discards the raw text immediately. This allows it to process gigabytes of data on standard laptops with minimal memory footprint.
+
+Current Version: v2.9 (Robust Graphics Safety)
 🚀 Key Features
-1. 🛡️ Privacy-First & Offline
+1. 🛡️ Privacy-First & Air-Gap Ready
 
-    Zero Data Egress: All processing happens locally in your browser/server. No data is sent to external APIs (unless you explicitly use the AI Analyst feature).
-    The "Privacy Proxy": Use the built-in Data Refinery to strip PII, chat logs, and HTML from datasets before sharing them with third-party tools or LLMs.
+    Zero Data Egress: All core processing happens locally. No data is sent to the cloud unless you explicitly enable the optional "AI Analyst" feature.
+    The "Privacy Proxy": Includes a Data Refinery tool to strip PII, chat logs, and HTML from datasets before sharing them with third-party tools.
 
-2. ⚡ Streaming Architecture ("The Sketch")
+2. ⚡ Hybrid Architecture
 
-    Memory Safe: Processes 10M+ rows as easily as 100 rows.
-    Stateful Analysis: Pause, resume, and merge scans from multiple files (e.g., combining 12 months of CSV logs into a single analysis).
+    Interactive Mode (Streamlit): Drag-and-drop interface for immediate visual analysis.
+    Headless Mode (Harvester): A CLI utility (harvester.py) for processing massive files (10M+ rows) on remote servers without a GUI.
+    Additive Scanning: Pause, resume, and merge scans from multiple files into a single intelligence picture.
 
-3. 🧠 Advanced NLP (batteries included~)
+3. 🧠 Advanced Analytics
 
-    Lemmatization: Intelligent merging of word forms (run, running, ran → run) for accurate counting.
-    NER Lite: Heuristic-based Named Entity Recognition to identify People, Organizations, and Products without heavy ML models.
-    Temporal Analysis: If a date column is provided, the engine automatically builds time-series charts to show volume and term trends over time.
-    Keyphrase Scoring (TF-IDF): Identifies words that are statistically unique to specific documents, filtering out high-frequency noise.
+    Network Graphing: Physics-based visualization to see how concepts link together (e.g., clustering "Performance" separately from "Interrogation" in the same document).
+    Polymorphic NER: Heuristic-based Named Entity Recognition that identifies Acronyms (DARPA), IDs (COVID-19), and Proper Names without heavy ML models.
+    Temporal Analysis: Automatically builds time-series charts to show volume and term trends if a date column is detected.
+    Hybrid Signature: Generates a cryptographic QR-coded heatmap to prove the "Chain of Custody" for your analysis.
+
+4. 🤖 Optional AI Analyst
+
+    Integrates with OpenAI (GPT-4o) or xAI (Grok).
+    Privacy Guard: The AI only sees the statistical metadata (frequencies and correlations), never the raw document text.
 
 📖 Use Cases
-🏢 Corporate & Strategic
 
     Crisis Timeline Reconstruction: Map high-severity words (e.g., "leak", "fail") over time to pinpoint exactly when an incident started.
     Stakeholder Mapping: Instantly see Who and What are driving conversations using Entity Detection.
-    M&A Due Diligence: Rapidly scan data rooms for liability terms (lawsuits, risks) without manually reading thousands of documents.
-
-🔬 Research & Forensics
-
-    "Year-in-Review" Retrospectives: Ingest a full year of journals or logs to visualize how themes shifted from Q1 to Q4.
-    Signal vs. Noise: Use TF-IDF extraction to ignore generic corporate jargon and focus on the unique identifiers of a project or team.
     Literary Forensics: Analyze vocabulary diversity and phrase patterns to detect authorship style or "ghostwriting."
-
-🎓 Education & Learning
-
-    LMS Forum Analysis: visualize student sentiment trends before and after exams.
-    Curriculum Audit: Identify the most frequently discussed concepts vs. the "Unknown Unknowns" (topics students are confused about but aren't asking directly).
+    LMS Forum Analysis: Visualize student sentiment trends and "Unknown Unknowns" (topics students are confused about but aren't asking directly).
 
 🛠️ Installation & Setup
-
-    Clone the repository:
+1. Clone & Install
 
 Bash
 
 git clone https://github.com/yourusername/signal-foundry.git
 cd signal-foundry
-
-Install requirements:
-
-Bash
-
 pip install -r requirements.txt
 
-Run the App:
+2. Configuration (Crucial Step)
+
+The app requires a password for the login screen and optional API keys for AI features.
+Create a file at .streamlit/secrets.toml:
+
+toml
+
+# .streamlit/secrets.toml
+
+auth_password = "your-secure-password"
+
+# Optional: For AI Analyst features
+openai_api_key = "sk-..."
+xai_api_key = "..."
+
+3. Running the App
+
+Interactive Mode (The Viewer):
 
 Bash
 
-    streamlit run mainapp.py
+streamlit run mainapp.py
 
-    First Run:
-        The app will automatically download necessary NLTK corpora (WordNet, VADER, etc.) on the first launch.
+On first run, the app will automatically check for and download necessary NLTK corpora (WordNet, VADER).
 
-📊 supported Formats
+Headless Mode (The Harvester):
+For processing massive CSVs/Excels on a server without a display:
+
+Bash
+
+python harvester.py --input "huge_dataset.csv" --col "message_text" --output "my_sketch.pkl"
+
+📊 Supported Formats
 
 Signal Foundry ingests specific text columns or raw content from:
 
-    CSV / Excel (.xlsx): (Auto-detects headers and allows column selection)
-    PDF: (Extracts raw text layer)
-    JSON / JSONL: (Stream processing for logs)
-    VTT: (Video transcripts)
-    PowerPoint (.pptx): (Extracts slide text)
+    CSV / Excel (.xlsx): Auto-detects headers; allows specific column selection for Text, Date, and Category.
+    PDF: Extracts raw text layer (requires pypdf).
+    PowerPoint (.pptx): Extracts slide text (requires python-pptx).
+    VTT: Video transcripts (automatically strips timestamps).
+    JSON / JSONL: Stream processing for logs.
+    URLs: Basic web scraping for quick intel gathering.
+
+🧩 Dependencies
+
+The engine is built on a "Soft Dependency" model. It will run with minimal requirements, but features unlock as you install more packages:
+
+    streamlit, pandas, numpy, matplotlib (Core)
+    networkx (Graphing)
+    scikit-learn (Topic Modeling)
+    nltk (Sentiment & Lemmatization)
+    openpyxl, pypdf, python-pptx (File Readers)
+    qrcode (Hybrid Signatures)
 
 License: MIT
-Status: Production (v2.0)
+Status: Production (v2.9)
