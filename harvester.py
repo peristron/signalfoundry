@@ -153,27 +153,34 @@ def main():
     # 1 to flatten bigrams {('a','b'): 5} -> {'a|b': 5}
     serializable_bigrams = {f"{k[0]}|{k[1]}": v for k, v in bigram_counter.items()}
     
-    # 2construct dictionary matching StreamScanner.load_from_json structure
+    # 2 construct dictionary matching StreamScanner.load_from_json structure
     sketch_data = {
         "total_rows": total_docs,
         "counts": dict(word_counter),
         "bigrams": serializable_bigrams,
         "topic_docs": [], # "harvester" doesn't store individual docs (privacy), so leaving this empty
         "limit_reached": True,
-        # to pass the aggregate sentiment counts that "Harvester" calculated
-        "temporal_counts": {}, # to track time
-        "entity_counts": {},   # to track entities
+        "temporal_counts": {}, 
+        "entity_counts": {},   
         "doc_freqs": dict(word_counter), # approximation for TF-IDF
-        "metadata": {"source": args.input, "col": args.col}
+        "metadata": {"source": args.input, "col": args.col, "generated_by": "Harvester v2.9"}
     }
     
-    # saving as JSON
-    with open(args.output, 'w', encoding='utf-8') as f:
-        json.dump(sketch_data, f)
-        
-    print(f"✅ Sketch saved to: {args.output}")
-    print(f"   Total Rows: {total_docs}")
-    print(f"   Unique Words: {len(word_counter)}")
+    # Force .json extension so the Main App uploader accepts the file
+    out_path = args.output
+    if not out_path.lower().endswith('.json'):
+        out_path += '.json'
+
+    try:
+        with open(out_path, 'w', encoding='utf-8') as f:
+            json.dump(sketch_data, f)
+            
+        print(f"✅ Sketch saved to: {out_path}")
+        print(f"   Total Rows: {total_docs}")
+        print(f"   Unique Words: {len(word_counter)}")
+        print("   -> Upload this JSON file to the 'Offline Analysis' section in the Main App.")
+    except Exception as e:
+        print(f"❌ Error saving file: {e}")
 
 if __name__ == "__main__":
     main()
