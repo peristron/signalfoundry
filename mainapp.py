@@ -1990,17 +1990,16 @@ with tab_work:
                     top_20 = [w for w, c in combined_counts.most_common(20)]
                     
                     if len(top_20) > 1:
-                        # 1. Generate the Matrix Data
+                        # to generate the matrix data
                         mat = np.zeros((len(top_20), len(top_20)))
                         for i, w1 in enumerate(top_20):
                             for j, w2 in enumerate(top_20):
                                 if i != j: mat[i][j] = scanner.global_bigrams.get((w1, w2), 0) + scanner.global_bigrams.get((w2, w1), 0)
                         
-                        # 2. Plot Heatmap to a PIL Image (Memory Buffer)
-                        fig_h, ax_h = plt.subplots(figsize=(10, 10)) # Square aspect ratio is better for QR
-                        ax_h.imshow(mat, cmap=colormap, interpolation='nearest') # 'nearest' gives distinct blocks
+                        # plot heatmap to a PIL image (memory buffer)
+                        fig_h, ax_h = plt.subplots(figsize=(10, 10)) 
+                        ax_h.imshow(mat, cmap=colormap, interpolation='nearest') 
                         
-                        # Clean up the plot for the "Signature" look (remove axis noise if in QR mode)
                         if viz_mode == "Hybrid Signature (Scanable)":
                             ax_h.axis('off')
                             plt.tight_layout(pad=0)
@@ -2010,7 +2009,6 @@ with tab_work:
                             ax_h.set_xticklabels(top_20, rotation=45, ha="right")
                             ax_h.set_yticklabels(top_20)
                         
-                        # Save Matplotlib fig to PIL Object
                         buf = BytesIO()
                         fig_h.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
                         buf.seek(0)
@@ -2024,41 +2022,45 @@ with tab_work:
                             else:
                                 from PIL import Image, ImageEnhance
                                 
-                                # A. Prepare the Heatmap (The "Artistic Background")
-                                heatmap_img = Image.open(buf).convert("RGBA")
+                                # for any custom "stegan0graphic" payload
+                                custom_msg = st.text_input("🔒 Encode Custom Payload (Optional)", placeholder="Leave empty for standard metadata...")
                                 
-                                # Brighten heatmap so dark QR dots stand out against it
+                                # preparing heatmap
+                                heatmap_img = Image.open(buf).convert("RGBA")
                                 enhancer = ImageEnhance.Brightness(heatmap_img)
                                 heatmap_img = enhancer.enhance(1.5) 
                                 
-                                # B. Generate the QR (The "Data Layer")
-                                signature_payload = (
-                                    f"SIGNAL FOUNDRY\nRef: {st.session_state.get('last_sketch_hash', 'SESSION')}\n"
-                                    f"Top: {', '.join(top_20[:3])}"
-                                )
+                                # to define payload
+                                if custom_msg.strip():
+                                    signature_payload = custom_msg
+                                else:
+                                    signature_payload = (
+                                        f"SIGNAL FOUNDRY\nRef: {st.session_state.get('last_sketch_hash', 'SESSION')}\n"
+                                        f"Top: {', '.join(top_20[:3])}"
+                                    )
+                                
+                                # generate the QR code
                                 qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=1)
                                 qr.add_data(signature_payload)
                                 qr.make(fit=True)
-                                
-                                # Create QR image: Black Data, Transparent Background
                                 qr_img = qr.make_image(fill_color="black", back_color="transparent").convert("RGBA")
                                 
-                                # C. Composite (Merge)
-                                # Resize heatmap to match QR exactly
+                                # composite
                                 heatmap_resized = heatmap_img.resize(qr_img.size)
-                                
-                                # Overlay: The Heatmap is the "Paper", the QR is the "Ink"
-                                # We create a new image combining them
                                 hybrid_img = Image.alpha_composite(heatmap_resized, qr_img)
                                 
                                 c1, c2 = st.columns([2, 1])
                                 with c1:
-                                    st.image(hybrid_img, caption="Scan this Heatmap to verify analysis data.", use_container_width=True)
+                                    st.image(hybrid_img, caption="Scan to verify data (or read payload).", use_container_width=True)
                                 with c2:
                                     st.markdown("### 🧬 Hybrid Signature")
-                                    st.info("The colors represent the data relationships (Heatmap). The dark overlay pattern encodes the document metadata (QR).")
+                                    if custom_msg.strip():
+                                        st.warning("⚠️ **Mode:** Custom Payload Active")
+                                    else:
+                                        st.info("ℹ️ **Mode:** Standard Metadata")
                                     
-                                    # Convert hybrid to bytes for download
+                                    st.caption("The heatmap encodes the data relationships. The QR overlay encodes the message.")
+                                    
                                     final_buf = BytesIO()
                                     hybrid_img.save(final_buf, format="PNG")
                                     st.download_button("📥 Download Signature", final_buf.getvalue(), "heatmap_signature.png", "image/png")
