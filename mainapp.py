@@ -1256,19 +1256,37 @@ with st.sidebar:
     # --end
     
     st.divider()
-    with st.expander("🌐 Web/Text Import"):
-        sketch_upload = st.file_uploader("Import Sketch (.json)", type=["json"])
+
+    # 1. quick imports (web/text)
+    with st.expander("🌐 Quick Web / Text Paste"):
+        url_input = st.text_area("URLs (1 per line)", placeholder="https://example.com/article")
+        manual_input = st.text_area("Manual Text Paste", placeholder="Paste raw text content here...")
+
+    # 2. offline / enterprise import (harvester)
+    with st.expander("📡 Load Offline Analysis (Harvester)", expanded=False):
+        st.markdown("Upload pre-computed analysis from your secure server.")
+        
+        sketch_upload = st.file_uploader(
+            "Upload Sketch File (.json)", 
+            type=["json"],
+            help="Use this for datasets >200MB. Run the 'harvester.py' script on your data server, then upload the resulting JSON here.\n\nCommand:\npython harvester.py --input data.csv --col text --output sketch.json"
+        )
+        
         if sketch_upload:
             file_hash = hash(sketch_upload.getvalue())
             if st.session_state.get('last_sketch_hash') != file_hash:
-                if st.session_state['sketch'].load_from_json(sketch_upload.getvalue().decode('utf-8')):
-                    st.session_state['last_sketch_hash'] = file_hash
-                    st.success("Sketch Loaded Successfully!")
-                else:
-                    st.error("Invalid Sketch File")
-
-        url_input = st.text_area("URLs (1 per line; doesn't always work with more modern sites)")
-        manual_input = st.text_area("Manual Text")
+                try:
+                    # clearing previous data to prevent corruption
+                    reset_sketch()
+                    
+                    json_str = sketch_upload.getvalue().decode('utf-8')
+                    if st.session_state['sketch'].load_from_json(json_str):
+                        st.session_state['last_sketch_hash'] = file_hash
+                        st.success(f"✅ Loaded Sketch: {sketch_upload.name}")
+                    else:
+                        st.error("❌ Invalid Schema: JSON does not match Signal Foundry structure.")
+                except Exception as e:
+                    st.error(f"❌ Load Error: {e}")
         
     st.divider()
     st.divider()
