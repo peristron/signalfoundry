@@ -1,17 +1,19 @@
 import argparse
 import sys
 import os
-import joblib
+import json
 import pandas as pd
 import numpy as np
 import re
 from collections import Counter
 from itertools import pairwise
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
 from wordcloud import STOPWORDS
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
+# Optional: Import these if you uncomment Phase 2 (Topic Modeling)
+# from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn.decomposition import LatentDirichletAllocation
 
 # Import shared logic
 import text_processor as tp
@@ -20,9 +22,9 @@ def setup_args():
     parser = argparse.ArgumentParser(description="Harvester: Large Scale Text Processor")
     parser.add_argument("--input", required=True, help="Path to input file (CSV/Excel) or folder")
     parser.add_argument("--col", required=True, help="Name of the text column to analyze")
-    parser.add_argument("--output", default="sketch.pkl", help="Output path for the sketch file")
+    parser.add_argument("--output", default="sketch.json", help="Output path for the sketch file (.json)")
     parser.add_argument("--chunksize", type=int, default=50000, help="Rows per chunk")
-    parser.add_argument("--topics", type=int, default=5, help="Number of LDA topics")
+    # parser.add_argument("--topics", type=int, default=5, help="Number of LDA topics (Disabled for speed)")
     parser.add_argument("--no-bigrams", action="store_true", help="Disable bigram calculation")
     return parser.parse_args()
 
@@ -36,10 +38,6 @@ def stream_file(file_path, chunksize, text_col):
             yield chunk[text_col].dropna().astype(str).tolist()
             
     elif ext in ['xlsx', 'xlsm']:
-        # Excel Streaming (slower, but memory safe-ish via openpyxl if handled carefully, but pandas read_excel doesn't chunk well)
-        # For massive Excel, we load full columns or convert to CSV first. 
-        # Here we use standard pandas load for Excel as chunking is limited support in engines.
-        # Warning: Excel is hard to stream. We assume if it's 10M rows it's CSV.
         print(f"Loading Excel file {file_path}...")
         df = pd.read_excel(file_path, usecols=[text_col])
         # Manually chunk the dataframe
@@ -61,8 +59,6 @@ def main():
     # 2. State Aggregators
     word_counter = Counter()
     bigram_counter = Counter()
-    pos_count = 0
-    neg_count = 0
     total_docs = 0
     
     pos_thresh = 0.05
@@ -78,30 +74,17 @@ def main():
     
     for fpath in files:
         for chunk_idx, texts in enumerate(stream_file(fpath, args.chunksize, args.col)):
-            clean_chunk = []
+            
             for text in texts:
                 tokens = tp.clean_and_tokenize(
                     text, True, True, True, True, trans_map, stopwords, None, 2, True
                 )
                 if not tokens: continue
                 
-                # Sentiment (approximate based on raw text or tokens? using tokens for speed here)
-                # Note: VADER works best on raw text, but for speed on 10M rows, we check tokens or simple heuristics?
-                # Let's do VADER on the raw sentence for accuracy, but it is slow. 
-                # OPTIMIZATION: Check sentiment of the cleaning result to be consistent with Viewer.
-                
                 # Update Counters
                 word_counter.update(tokens)
                 if not args.no_bigrams and len(tokens) > 1:
                     bigram_counter.update(tuple(pairwise(tokens)))
-                
-                # Bayesian Aggregates (Token level approximation to match Viewer logic roughly or Text level)
-                # The viewer sums counts of positive words. We do the same.
-                # This is much faster than running VADER on every sentence of 10M rows.
-                # We will re-calc this at the end based on the word_counter! 
-                # (See logic: we don't need to do it per row if we have the global word counts and a sentiment dictionary).
-                
-                clean_chunk.append(" ".join(tokens))
             
             total_docs += len(texts)
             print(f"   Processed chunk {chunk_idx+1} (approx {total_docs} rows)...")
@@ -109,64 +92,42 @@ def main():
     print(f"Phase 1 Complete. Vocab Size: {len(word_counter)}")
     
     # --- PASS 2: TOPIC MODELING (ONLINE LDA) ---
-    print(">>> Phase 2: Training Online LDA...")
+    # NOTE: Disabled for efficiency. 
+    # The Main App generates topics dynamically from "topic_docs". 
+    # Since Harvester does not save raw document vectors (to keep JSON small and private),
+    # there is no need to spend CPU time calculating LDA models here that won't be displayed.
     
-    # Limit vocab to top 10,000 words for LDA stability and speed
-    top_vocab = [w for w, c in word_counter.most_common(10000)]
-    vectorizer = CountVectorizer(vocabulary=top_vocab) 
-    
-    lda = LatentDirichletAllocation(
-        n_components=args.topics,
-        learning_method='online',
-        random_state=42,
-        batch_size=args.chunksize,
-        max_iter=1 # 1 pass over data is usually enough for "sketching" massive data
-    )
-    
-    # We must stream again to partial_fit
-    for fpath in files:
-        for chunk_idx, texts in enumerate(stream_file(fpath, args.chunksize, args.col)):
-            # Clean again (CPU bound, but necessary to keep RAM low)
-            clean_docs = []
-            for text in texts:
-                tokens = tp.clean_and_tokenize(text, True, True, True, True, trans_map, stopwords, None, 2, True)
-                if tokens: clean_docs.append(" ".join(tokens))
-            
-            if clean_docs:
-                X = vectorizer.transform(clean_docs)
-                lda.partial_fit(X)
-                print(f"   LDA Trained on chunk {chunk_idx+1}")
+    # print(">>> Phase 2: Training Online LDA (Skipped for optimization)...")
+    # ... (LDA code removed to save I/O and CPU) ...
 
     # --- FINAL SENTIMENT AGGREGATION ---
-    # We calculate Pos/Neg counts based on the global vocabulary to save compute time
-    # This matches the "Viewer" logic: pos_count = sum(counts[w] for w in sent if > thresh)
     print(">>> Finalizing Sentiment Stats...")
+    # Calculate sentiment based on unique vocabulary (much faster than row-by-row)
     vocab_sents = {w: sia.polarity_scores(w)['compound'] for w in word_counter.keys()}
     
-    final_pos_count = sum(word_counter[w] for w, s in vocab_sents.items() if s >= pos_thresh)
-    final_neg_count = sum(word_counter[w] for w, s in vocab_sents.items() if s <= neg_thresh)
+    # Not explicitly saved in JSON fields, but useful if you extend functionality later
+    # final_pos_count = sum(word_counter[w] for w, s in vocab_sents.items() if s >= pos_thresh)
+    # final_neg_count = sum(word_counter[w] for w, s in vocab_sents.items() if s <= neg_thresh)
 
-    # -serialization
-    import json
+    # --- SERIALIZATION ---
     
-    # convert counters and complex objects to JSON-serializable formats to match mainapp expectations
-    # 1 to flatten bigrams {('a','b'): 5} -> {'a|b': 5}
+    # 1. Flatten Bigrams for JSON: {('a','b'): 5} -> {'a|b': 5}
     serializable_bigrams = {f"{k[0]}|{k[1]}": v for k, v in bigram_counter.items()}
     
-    # 2 construct dictionary matching StreamScanner.load_from_json structure
+    # 2. Construct Schema
     sketch_data = {
         "total_rows": total_docs,
         "counts": dict(word_counter),
         "bigrams": serializable_bigrams,
-        "topic_docs": [], # "harvester" doesn't store individual docs (privacy), so leaving this empty
+        "topic_docs": [], # Empty for privacy/size; Main App Topic Modeling will be disabled for this file.
         "limit_reached": True,
         "temporal_counts": {}, 
         "entity_counts": {},   
-        "doc_freqs": dict(word_counter), # approximation for TF-IDF
+        "doc_freqs": dict(word_counter), # Approx for TF-IDF
         "metadata": {"source": args.input, "col": args.col, "generated_by": "Harvester v2.9"}
     }
     
-    # Force .json extension so the Main App uploader accepts the file
+    # 3. Save
     out_path = args.output
     if not out_path.lower().endswith('.json'):
         out_path += '.json'
