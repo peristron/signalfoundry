@@ -146,19 +146,31 @@ def main():
     final_pos_count = sum(word_counter[w] for w, s in vocab_sents.items() if s >= pos_thresh)
     final_neg_count = sum(word_counter[w] for w, s in vocab_sents.items() if s <= neg_thresh)
 
-    # --- SERIALIZATION ---
-    sketch = {
-        "word_counter": word_counter,
-        "bigram_counter": bigram_counter,
-        "lda_model": lda,
-        "lda_feature_names": vectorizer.get_feature_names_out(),
-        "pos_count": final_pos_count,
-        "neg_count": final_neg_count,
+    # -serialization
+    import json
+    
+    # convert counters and complex objects to JSON-serializable formats to match mainapp expectations
+    # 1 to flatten bigrams {('a','b'): 5} -> {'a|b': 5}
+    serializable_bigrams = {f"{k[0]}|{k[1]}": v for k, v in bigram_counter.items()}
+    
+    # 2construct dictionary matching StreamScanner.load_from_json structure
+    sketch_data = {
         "total_rows": total_docs,
+        "counts": dict(word_counter),
+        "bigrams": serializable_bigrams,
+        "topic_docs": [], # "harvester" doesn't store individual docs (privacy), so leaving this empty
+        "limit_reached": True,
+        # to pass the aggregate sentiment counts that "Harvester" calculated
+        "temporal_counts": {}, # to track time
+        "entity_counts": {},   # to track entities
+        "doc_freqs": dict(word_counter), # approximation for TF-IDF
         "metadata": {"source": args.input, "col": args.col}
     }
     
-    joblib.dump(sketch, args.output)
+    # saving as JSON
+    with open(args.output, 'w', encoding='utf-8') as f:
+        json.dump(sketch_data, f)
+        
     print(f"✅ Sketch saved to: {args.output}")
     print(f"   Total Rows: {total_docs}")
     print(f"   Unique Words: {len(word_counter)}")
