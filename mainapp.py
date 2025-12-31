@@ -1766,10 +1766,29 @@ with tab_work:
                 st.info("No capitalized entities detected.")
 
         with tab_key:
-            st.markdown("#### TF-IDF Keyphrases")
-            st.caption("These words are 'Unique' to specific documents, filtered out generic high-frequency noise.")
+            st.subheader("🔑 TF-IDF Keyphrases (The 'Technical DNA')")
+            
+            # 1 plain language explanation banner
+            st.info(
+                "**How to read this:** Unlike simple word counts, **TF-IDF** penalizes words that appear everywhere (like 'report' or 'email') and boosts words that are unique to specific incidents or documents. \n\n"
+                "👉 **High Score** = Rare, specific, high-signal (e.g. 'Oximetry').\n"
+                "👉 **Low Score** = Common, generic, low-signal.",
+                icon="ℹ️"
+            )
+            
             df_tfidf = calculate_tfidf(scanner, 50)
-            st.dataframe(df_tfidf, use_container_width=True)
+            
+            # 2 DataFrame with hover-over tooltips
+            st.dataframe(
+                df_tfidf, 
+                use_container_width=True,
+                column_config={
+                    "Term": st.column_config.TextColumn("Term", help="The extracted vocabulary word."),
+                    "TF (Count)": st.column_config.NumberColumn("TF (Count)", help="Term Frequency: Total number of times this word appears."),
+                    "DF (Docs)": st.column_config.NumberColumn("DF (Docs)", help="Document Frequency: Number of distinct documents (or chunks) containing this word. Low DF = Specific."),
+                    "Keyphrase Score": st.column_config.NumberColumn("Keyphrase Score", help="Mathematical Uniqueness. Higher = More 'Technical' and less 'Generic'.")
+                }
+            )
 
         st.divider()
         
