@@ -1262,9 +1262,12 @@ with st.sidebar:
         url_input = st.text_area("URLs (1 per line)", placeholder="https://example.com/article")
         manual_input = st.text_area("Manual Text Paste", placeholder="Paste raw text content here...")
 
-    # 2. offline / enterprise import (harvester)
+    # 2. offline / enterprise import ("harvester")
     with st.expander("📡 Load Offline Analysis (Harvester)", expanded=False):
         st.markdown("Upload pre-computed analysis from your secure server.")
+        
+        # the feature gap warning
+        st.caption("⚠️ **Note:** Offline sketches provide Graphs, Counts & NPMI. Time-series and Entities are disabled in this mode.")
         
         sketch_upload = st.file_uploader(
             "Upload Sketch File (.json)", 
@@ -1289,7 +1292,7 @@ with st.sidebar:
                     st.error(f"❌ Load Error: {e}")
         
     st.divider()
-    st.divider()
+   
     st.header("🔐 AI Setup", help="This AI feature reads the *metadata only*; it does not upload raw document text to the cloud provider, nor does it 'read' it.")
     
     if st.session_state['authenticated']:
