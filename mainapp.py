@@ -1990,13 +1990,13 @@ with tab_work:
                     top_20 = [w for w, c in combined_counts.most_common(20)]
                     
                     if len(top_20) > 1:
-                        # to generate the matrix data
+                        # generating matrix data
                         mat = np.zeros((len(top_20), len(top_20)))
                         for i, w1 in enumerate(top_20):
                             for j, w2 in enumerate(top_20):
                                 if i != j: mat[i][j] = scanner.global_bigrams.get((w1, w2), 0) + scanner.global_bigrams.get((w2, w1), 0)
                         
-                        # plot heatmap to a PIL image (memory buffer)
+                        # to plot heatmap to a PIL image (memory buffer)
                         fig_h, ax_h = plt.subplots(figsize=(10, 10)) 
                         ax_h.imshow(mat, cmap=colormap, interpolation='nearest') 
                         
@@ -2022,15 +2022,20 @@ with tab_work:
                             else:
                                 from PIL import Image, ImageEnhance
                                 
-                                # for any custom "stegan0graphic" payload
-                                custom_msg = st.text_input("🔒 Encode Custom Payload (Optional)", placeholder="Leave empty for standard metadata...")
+                                # to allow for custom "steganographic" payload (with char limit)
+                                custom_msg = st.text_input(
+                                    "🔒 Encode Custom Payload (Optional)", 
+                                    placeholder="Leave empty for standard metadata...",
+                                    max_chars=1000,
+                                    help="Limit: ~1000 characters to ensure QR readability with high error correction."
+                                )
                                 
-                                # preparing heatmap
+                                # prepping heatmap
                                 heatmap_img = Image.open(buf).convert("RGBA")
                                 enhancer = ImageEnhance.Brightness(heatmap_img)
                                 heatmap_img = enhancer.enhance(1.5) 
                                 
-                                # to define payload
+                                # defining payload
                                 if custom_msg.strip():
                                     signature_payload = custom_msg
                                 else:
@@ -2039,31 +2044,35 @@ with tab_work:
                                         f"Top: {', '.join(top_20[:3])}"
                                     )
                                 
-                                # generate the QR code
-                                qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=1)
-                                qr.add_data(signature_payload)
-                                qr.make(fit=True)
-                                qr_img = qr.make_image(fill_color="black", back_color="transparent").convert("RGBA")
-                                
-                                # composite
-                                heatmap_resized = heatmap_img.resize(qr_img.size)
-                                hybrid_img = Image.alpha_composite(heatmap_resized, qr_img)
-                                
-                                c1, c2 = st.columns([2, 1])
-                                with c1:
-                                    st.image(hybrid_img, caption="Scan to verify data (or read payload).", use_container_width=True)
-                                with c2:
-                                    st.markdown("### 🧬 Hybrid Signature")
-                                    if custom_msg.strip():
-                                        st.warning("⚠️ **Mode:** Custom Payload Active")
-                                    else:
-                                        st.info("ℹ️ **Mode:** Standard Metadata")
+                                # to generate QR with safety check
+                                try:
+                                    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=1)
+                                    qr.add_data(signature_payload)
+                                    qr.make(fit=True)
+                                    qr_img = qr.make_image(fill_color="black", back_color="transparent").convert("RGBA")
                                     
-                                    st.caption("The heatmap encodes the data relationships. The QR overlay encodes the message.")
+                                    # composite
+                                    heatmap_resized = heatmap_img.resize(qr_img.size)
+                                    hybrid_img = Image.alpha_composite(heatmap_resized, qr_img)
                                     
-                                    final_buf = BytesIO()
-                                    hybrid_img.save(final_buf, format="PNG")
-                                    st.download_button("📥 Download Signature", final_buf.getvalue(), "heatmap_signature.png", "image/png")
+                                    c1, c2 = st.columns([2, 1])
+                                    with c1:
+                                        st.image(hybrid_img, caption="Scan to verify data (or read payload).", use_container_width=True)
+                                    with c2:
+                                        st.markdown("### 🧬 Hybrid Signature")
+                                        if custom_msg.strip():
+                                            st.warning("⚠️ **Mode:** Custom Payload Active")
+                                        else:
+                                            st.info("ℹ️ **Mode:** Standard Metadata")
+                                        
+                                        st.caption("The colors represent the data relationships (Heatmap). The dark overlay pattern encodes the message (QR).")
+                                        
+                                        final_buf = BytesIO()
+                                        hybrid_img.save(final_buf, format="PNG")
+                                        st.download_button("📥 Download Signature", final_buf.getvalue(), "heatmap_signature.png", "image/png")
+                                        
+                                except Exception as e:
+                                    st.error("❌ **Payload Too Large:** The text is too long to fit into a High-Security QR code. Please shorten your message.")
                     else:
                         st.info("Not enough data to generate signature.")
                     #
