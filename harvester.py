@@ -131,21 +131,22 @@ def main():
     # print(">>> Phase 2: Training Online LDA (Skipped for optimization)...")
     # ... (LDA code removed to save I/O and CPU) ...
 
-    # --- FINAL SENTIMENT AGGREGATION ---
+    # -sentimnt aggregation
     print(">>> Finalizing Sentiment Stats...")
-    # Calculate sentiment based on unique vocabulary (much faster than row-by-row)
+    # to calculate sentiment based on unique vocabulary (much faster than row-by-row)
     vocab_sents = {w: sia.polarity_scores(w)['compound'] for w in word_counter.keys()}
     
-    # Not explicitly saved in JSON fields, but useful if you extend functionality later
+    # not explicitly saved in JSON fields, but useful if for possibly extending functionality later
     # final_pos_count = sum(word_counter[w] for w, s in vocab_sents.items() if s >= pos_thresh)
     # final_neg_count = sum(word_counter[w] for w, s in vocab_sents.items() if s <= neg_thresh)
+    # sentiment aggregation intentionally skipped tho — the main app computes it on demand
 
-    # --- SERIALIZATION ---
+    # -serialization
     
-    # 1. Flatten Bigrams for JSON: {('a','b'): 5} -> {'a|b': 5}
+    # flatten bi-grams for JSON: {('a','b'): 5} -> {'a|b': 5}
     serializable_bigrams = {f"{k[0]}|{k[1]}": v for k, v in bigram_counter.items()}
     
-    # 2. Construct Schema
+    # schema construction
     sketch_data = {
         "total_rows": total_docs,
         "counts": dict(word_counter),
@@ -158,7 +159,7 @@ def main():
         "metadata": {"source": args.input, "col": args.col, "generated_by": "Harvester v2.9"}
     }
     
-    # 3. Save
+    # save
     out_path = args.output
     if not out_path.lower().endswith('.json'):
         out_path += '.json'
