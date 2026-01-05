@@ -1473,8 +1473,8 @@ with tab_work:
     if all_inputs:
         st.subheader("🚀 Scanning Phase")
         
-        # --- NEW BATCH SCANNER ---
-        # Only show this big button if we have more than 1 file/url
+        # --batch scanner
+        # only shows this button if we have more than 1 file/url
         if len(all_inputs) > 1:
             if st.button(f"⚡ Scan ALL {len(all_inputs)} Items (Batch)", type="primary"):
                 # 1. Handle Reset Logic based on user checkbox
@@ -1496,25 +1496,37 @@ with tab_work:
                     # Logic to pick the reader (Simplified detection for batch mode)
                     batch_iter = iter([])
                     if fname.endswith(".csv"):
-                        # In batch mode, we try to auto-detect text columns or fallback to raw
-                        # This is a trade-off: Batch mode is faster but less granular config than single mode
                         headers = detect_csv_headers(f_bytes)
                         if headers:
-                            batch_iter = read_rows_csv_structured(f_bytes, "auto", ",", True, [headers[0]], None, None, " ")
+                            # Header exists → use first column (safe default)
+                            batch_iter = read_rows_csv_structured(
+                                f_bytes, "auto", ",", True, [headers[0]], None, None, " "
+                            )
                         else:
+                            # No header detected → fall back to treating as raw text lines (current safe behavior)
+                            # Alternative (more aggressive): treat as CSV with no header and join all columns
+                            # Uncomment the line below if you want to capture everything in headerless CSVs
+                            # batch_iter = read_rows_csv_structured(f_bytes, "auto", ",", False,
+                            #                                       [f"col_{i}" for i in range(20)], None, None, " ")
                             batch_iter = read_rows_raw_lines(f_bytes)
+
                     elif fname.endswith(".xlsx"):
                         sheets = get_excel_sheetnames(f_bytes)
                         if sheets:
                             batch_iter = iter_excel_structured(f_bytes, sheets[0], True, ["col_0"], None, None, " ")
+
                     elif fname.endswith(".pdf"):
                         batch_iter = read_rows_pdf(f_bytes)
+
                     elif fname.endswith(".pptx"):
                         batch_iter = read_rows_pptx(f_bytes)
+
                     elif fname.endswith(".vtt"):
                         batch_iter = read_rows_vtt(f_bytes)
+
                     elif fname.endswith(".json"):
                         batch_iter = read_rows_json(f_bytes)
+
                     else:
                         batch_iter = read_rows_raw_lines(f_bytes)
                         
