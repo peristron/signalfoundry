@@ -1,103 +1,102 @@
-Signal Foundry: The Unstructured Data Intelligence Engine
+# Signal Foundry  
+### The Unstructured Data Intel Engine  
+**A b*llshit-seeking missile disguised as a text analytics tool.**
 
-Signal Foundry is a lightweight, privacy-first analytics platform designed to extract mathematical structure, temporal trends, and qualitative insights from massive, messy text datasets ("dirty data").
+Most "intelligence" tools drown you in **how** — elaborate mechanisms, 400-page reports, 47-step frameworks, and 19 new acronyms that all mean "we're doing something." (aka "mechanistic porn")
 
-Unlike traditional NLP tools that require loading entire datasets into RAM, Signal Foundry uses a Streaming + Sketching architecture. It reads files in small chunks, extracts statistical summaries (n-grams, entity counts, vocabulary distributions) into a lightweight "Sketch," and discards the raw text immediately. This allows it to process gigabytes of data on standard laptops with minimal memory footprint.
+Signal Foundry was built for one purpose: **rip away the "how" and expose the "why".**
 
-Current Version: v2.9 (Robust Graphics Safety)
-🚀 Key Features
-1. 🛡️ Privacy-First & Air-Gap Ready
+In <60 seconds it shows you:
+- Who actually matters (entities)
+- What they’re really talking about (NPMI sticky phrases)
+- What they’re deliberately trying to hide (network graph clusters that refuse to connect)
 
-    Zero Data Egress: All core processing happens locally. No data is sent to the cloud unless you explicitly enable the optional "AI Analyst" feature.
-    The "Privacy Proxy": Includes a Data Refinery tool to strip PII, chat logs, and HTML from datasets before sharing them with third-party tools.
+Because the **why** always leaks through the terminology, the funding sources, and the topological shape of the language — never through the official narrative.
 
-2. ⚡ Hybrid Architecture
+Current Version: v2.9 — Production, Air-Gap Ready, Graphics-Hardened
 
-    Interactive Mode (Streamlit): Drag-and-drop interface for immediate visual analysis.
-    Headless Mode (Harvester): A CLI utility (harvester.py) for processing massive files (10M+ rows) on remote servers without a GUI.
-    Additive Scanning: Pause, resume, and merge scans from multiple files into a single intelligence picture.
+### Core Thesis
+**Every act of motivated obfuscation leaves a mathematical fingerprint - and this's true for...accidental obfuscation too~.**  
+Signal Foundry is designed from the ground up to detect that fingerprint and make it hard to ignore.
 
-3. 🧠 Advanced Analytics
+### Key Capabilities
 
-    Network Graphing: Physics-based visualization to see how concepts link together (e.g., clustering "Performance" separately from "Interrogation" in the same document).
-    Polymorphic NER: Heuristic-based Named Entity Recognition that identifies Acronyms (DARPA), IDs (COVID-19), and Proper Names without heavy ML models.
-    Temporal Analysis: Automatically builds time-series charts to show volume and term trends if a date column is detected.
-    Hybrid Signature: Generates a cryptographic QR-coded heatmap to prove the "Chain of Custody" for your analysis.
+**1. Privacy-First & Air-Gap Native**  
+- Zero data egress by default  
+- Offline "Harvester" mode (`harvester.py`) for b|ack-site / SC|F use  
+- Raw text is discarded immediately after statistical sketching  
+- Optional AI Analyst sees only frequencies and correlations — never the source
 
-4. 🤖 Optional AI Analyst
+**2. The How → Why Arsenal**
 
-    Integrates with OpenAI (GPT-4o) or xAI (Grok).
-    Privacy Guard: The AI only sees the statistical metadata (frequencies and correlations), never the raw document text.
+| Feature                  | What It Actually Reveals                                      |
+|--------------------------|----------------------------------------------------------------|
+| NPMI Phrases             | The real "terms of art" that betray intent ("dual use", "cognitive liberty", "chain of custody") |
+| Polymorphic NER          | Who benefits, who funds, who executes |
+| Network Graph            | Topological proof of separate intent clusters in the same document ("performance enhancement" vs "interrogation") |
+| TF-IDF Keyphrases        | Unique technical DNA that survives boilerplate removal |
+| Entities + Graph together| Reveals: "Whose interest is actually being served here?" |
 
-📖 Use Cases
+**3. Hybrid Architecture**
 
-    Crisis Timeline Reconstruction: Map high-severity words (e.g., "leak", "fail") over time to pinpoint exactly when an incident started.
-    Stakeholder Mapping: Instantly see Who and What are driving conversations using Entity Detection.
-    Literary Forensics: Analyze vocabulary diversity and phrase patterns to detect authorship style or "ghostwriting."
-    LMS Forum Analysis: Visualize student sentiment trends and "Unknown Unknowns" (topics students are confused about but aren't asking directly).
+- Interactive Mode (`mainapp.py`): Drag-drop Streamlit interface for instant insight
+- Headless Harvester (`harvester.py`): Process 10M+ row datasets on secure servers, upload only the 5–15 MB sketch
+- Additive Scanning: Merge multiple files/leaks into a single intelligence picture without resetting
 
-🛠️ Installation & Setup
-1. Clone & Install
+**4. Provenance & Chain of Custody**
 
-Bash
+Hybrid Signature: A scannable QR-overlaid heatmap that cryptographically binds the visualization to the exact dataset hash.  
+Proof that your insight came from *this* document, not an AI hallucination.
 
+### Real-World Use Cases (Where It Hurts Them)
+
+- Mapping hidden intent in defense/neurotech policy documents
+- Detecting when "safety" language is being weaponized as cover
+- Identifying which three entities keep appearing together across 400 pages
+- Seeing that "non-invasive" and "transcranial" are the real threat vector, not sci-fi implants
+- Literary/digital forensics — instantly spotting ghostwriting or translated artifacts
+- Crisis timeline reconstruction — watching "leak" and "failure" spike three weeks before the public story breaks
+
+### Installation
+
+```bash
 git clone https://github.com/yourusername/signal-foundry.git
 cd signal-foundry
 pip install -r requirements.txt
 
-2. Configuration (Crucial Step)
 
-The app requires a password for the login screen and optional API keys for AI features.
-Create a file at .streamlit/secrets.toml:
+Create .streamlit/secrets.toml:
 
 toml
 
-# .streamlit/secrets.toml
+auth_password = "your-secure-password-here"
 
-auth_password = "your-secure-password"
+# Optional AI (still never sees the RAW text)
+# openai_api_key = "sk-..."
+# xai_api_key = "..."
 
-# Optional: For AI Analyst features
-openai_api_key = "sk-..."
-xai_api_key = "..."
-
-3. Running the App
-
-Interactive Mode (The Viewer):
+Run:
 
 Bash
 
+# Interactive mode
 streamlit run mainapp.py
 
-On first run, the app will automatically check for and download necessary NLTK corpora (WordNet, VADER).
+# Air-gapped / large-scale mode
+python harvester.py --input "classified_dataset.csv" --col "text" --output "sketch.json"
 
-Headless Mode (The Harvester):
-For processing massive CSVs/Excels on a server without a display:
+Supported Formats
 
-Bash
+CSV, Excel, PDF, PowerPoint, VTT, JSON/JSONL, URLs, raw text — whatever you’ve got.
+Dependencies (Graceful Degradation)
 
-python harvester.py --input "huge_dataset.csv" --col "message_text" --output "my_sketch.pkl"
-
-📊 Supported Formats
-
-Signal Foundry ingests specific text columns or raw content from:
-
-    CSV / Excel (.xlsx): Auto-detects headers; allows specific column selection for Text, Date, and Category.
-    PDF: Extracts raw text layer (requires pypdf).
-    PowerPoint (.pptx): Extracts slide text (requires python-pptx).
-    VTT: Video transcripts (automatically strips timestamps).
-    JSON / JSONL: Stream processing for logs.
-    URLs: Basic web scraping for quick intel gathering.
-
-🧩 Dependencies
-
-The engine is built on a "Soft Dependency" model. It will run with minimal requirements, but features unlock as you install more packages:
-
-    streamlit, pandas, numpy, matplotlib (Core)
-    networkx (Graphing)
-    scikit-learn (Topic Modeling)
-    nltk (Sentiment & Lemmatization)
-    openpyxl, pypdf, python-pptx (File Readers)
-    qrcode (Hybrid Signatures)
+Works with just pandas + streamlit.
+Install more → unlock graphs, topic modeling, sentiment, QR signatures.
+License
 
 License: MIT
-Status: Production (v2.9)
+Status
+
+Production v2.9
+Used in real investigations.
+May cause multiple "wait-what!" moments in under two minutes~
