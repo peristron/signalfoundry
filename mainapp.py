@@ -681,18 +681,23 @@ def clean_date_str(raw: Any) -> Optional[str]:
 def apply_text_cleaning(text: str, config: CleaningConfig) -> str:
     if not isinstance(text, str): return ""
     
-    # to fix "sticky acronyms" (e.g., "WHOrecommended" -> "WHO recommended")
-    # to split cases where PDF extraction glued a header to the next word
-    # logic: 2+ CAPS followed by 2+ lowercase letters
-    # use {2,} for the lowercase part to protect plurals like "PDFs" or "CEOs" from being split
-    text = re.sub(r'([A-Z]{2,})([a-z]{2,})', r'\1 \2', text)
-
-    # standard cleaning
+    # standard cleaning FIRST (to convert tags/artifacts to spaces)
+    # ensures artifacts like <br> become spaces so the de-hyphenator can see them
     if config.remove_chat: text = CHAT_ARTIFACT_RE.sub(" ", text)
     if config.remove_html: text = HTML_TAG_RE.sub(" ", text)
     if config.unescape:
         try: text = html.unescape(text)
         except: pass
+
+    # the de-hyphenation repair
+    # merges words split by hyphen+whitespace (e.g., "equiv-\nalent" -> "equivalent")
+    text = re.sub(r'(\w)-\s+(\w)', r'\1\2', text)
+    
+    # sticky Acronyms Fix (e.g., "WHOrecommended" -> "WHO recommended")
+    # logic: 2+ CAPS followed by 2+ lowercase letters
+    text = re.sub(r'([A-Z]{2,})([a-z]{2,})', r'\1 \2', text)
+
+    # final cleanups
     if config.remove_urls: text = URL_EMAIL_RE.sub(" ", text)
     
     # normalizing
