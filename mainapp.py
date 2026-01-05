@@ -220,15 +220,15 @@ class StreamScanner:
         self.total_rows_processed += rows
 
     def add_topic_sample(self, doc_counts: Counter):
-        if not doc_counts: return
-        # update document frequency (presence check) for TF-IDF
+    if not doc_counts: return
+    
+    # only updates doc_freqs if still sampling (prevents unnecessary work)
+    if not self.limit_reached and len(self.topic_docs) < MAX_TOPIC_DOCS:
         self.doc_freqs.update(doc_counts.keys())
-        
-        if self.limit_reached: return
+        self.topic_docs.append(doc_counts)
         if len(self.topic_docs) >= MAX_TOPIC_DOCS:
             self.limit_reached = True
-            return
-        self.topic_docs.append(doc_counts)
+    # if limit already reached, do nothing — saves memory/CPU
     
     def update_metadata_stats(self, date_key: Optional[str], cat_key: Optional[str], tokens: List[str]):
         if date_key:
