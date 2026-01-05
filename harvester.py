@@ -29,20 +29,51 @@ def setup_args():
     return parser.parse_args()
 
 def stream_file(file_path, chunksize, text_col):
-    """Yields lists of raw text strings from CSV or Excel."""
+    """Yields lists of raw text strings from CSV or Excel – now truly streaming for Excel."""
     ext = file_path.lower().split(".")[-1]
-    
+
     if ext == 'csv':
-        # CSV Streaming
-        for chunk in pd.read_csv(file_path, usecols=[text_col], chunksize=chunksize, on_bad_lines='skip', encoding='utf-8', engine='python'):
+        for chunk in pd.read_csv(file_path, usecols=[text_col], chunksize=chunksize, 
+                                 on_bad_lines='skip', encoding='utf-8', engine='python'):
             yield chunk[text_col].dropna().astype(str).tolist()
-            
+        
     elif ext in ['xlsx', 'xlsm']:
-        print(f"Loading Excel file {file_path}...")
-        df = pd.read_excel(file_path, usecols=[text_col])
-        # Manually chunk the dataframe
-        for i in range(0, len(df), chunksize):
-            yield df.iloc[i:i+chunksize][text_col].dropna().astype(str).tolist()
+        import openpyxl
+        print(f"Loading Excel file {file_path} (streaming)...")
+        wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+        ws = wb.active
+        rows = []
+        count = 0
+        col_idx = None
+        
+        for row_idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
+            if row_idx == 1:  # header row
+                header = [str(cell) if cell else "" for cell in row]
+                try:
+                    col_idx = header.index(text_col)
+                except ValueError:
+                    try:
+                        col_idx = [c.lower() for c in header].index(text_col.lower())
+                    except ValueError:
+                        print(f"Column '{text_col}' not found. Using first column.")
+                        col_idx = 0
+                continue
+            
+            if col_idx is not None:
+                cell_val = row[col_idx] if col_idx < len(row) else None
+                if cell_val is not None:
+                    text = str(cell_val).strip()
+                    if text and text.lower() not in ['nan', 'none', 'null']:
+                        rows.append(text)
+                        count += 1
+            
+            if len(rows) >= chunksize:
+                yield rows
+                rows = []
+        
+        if rows:
+            yield rows
+        wb.close()
 
 def main():
     args = setup_args()
