@@ -40,7 +40,7 @@ Signal Foundry is designed from the ground up to detect that fingerprint and mak
 **3. Hybrid Architecture**
 
 - Interactive Mode (`mainapp.py`): Drag-drop Streamlit interface for instant insight
-- Headless Harvester (`harvester.py`): Process 10M+ row datasets on secure servers, upload only the 5–15 MB sketch
+- Headless Harvester (harvester.py): Process 10M+ row datasets on secure servers. Generates a lightweight statistical sketch (NPMI/Counts/Graph only) to maximize privacy and speed
 - Additive Scanning: Merge multiple files/leaks into a single intelligence picture without resetting
 
 **4. Provenance & Chain of Custody**
