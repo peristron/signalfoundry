@@ -67,6 +67,10 @@ def clean_and_tokenize(
     if unescape:
         try: text = html.unescape(text)
         except: pass
+    
+    # de-hyphenation fix (merges "equiv- alent")
+    text = re.sub(r'(\w)-\s+(\w)', r'\1\2', text)
+
     text = text.lower()
     if phrase_pattern: text = phrase_pattern.sub(" ", text)
     
@@ -78,7 +82,7 @@ def clean_and_tokenize(
         tokens.append(t)
     return tokens
 
-# --- Readers ---
+# --readers
 
 def read_rows_raw_lines(file_bytes: bytes, encoding_choice: str = "auto") -> Iterable[str]:
     def _iter_with_encoding(enc: str):
