@@ -1479,8 +1479,26 @@ with tab_work:
         # --batch scanner
         # only shows this button if we have more than 1 file/url
         if len(all_inputs) > 1:
-            if st.button(f"⚡ Scan ALL {len(all_inputs)} Items (Batch)", type="primary"):
-                # 1. Handle Reset Logic based on user checkbox
+            # dynamic button labeling
+            item_count = len(all_inputs)
+            has_data = st.session_state['sketch'].total_rows_processed > 0
+            
+            if has_data:
+                if clear_on_scan:
+                    # data exists + clear is TRUE -> "re-scan / overwrite"
+                    batch_btn_label = f"♻️ Re-Scan ALL {item_count} Items (Overwrite)"
+                    batch_btn_help = "This will WIPE the current analysis and process the file list from scratch."
+                else:
+                    # if data exists + clear is FALSE -> "add" (risking duplicates)
+                    batch_btn_label = f"➕ Scan & Add ALL {item_count} Items (Additive)"
+                    batch_btn_help = "⚠️ CAUTION: This will process these files and ADD them to the existing results. If you have already scanned them, this will create DUPLICATES. Use 'Clear previous data' to start fresh."
+            else:
+                # no data -> standard start
+                batch_btn_label = f"⚡ Start Batch Scan ({item_count} Items)"
+                batch_btn_help = "Process all items in the list above."
+
+            if st.button(batch_btn_label, type="primary", help=batch_btn_help):
+                # handles reset logic based on user checkbox
                 if clear_on_scan: 
                     reset_sketch()
                 
