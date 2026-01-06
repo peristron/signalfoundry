@@ -1272,7 +1272,7 @@ with st.sidebar:
         st.markdown("Upload pre-computed analysis from your secure server.")
         
         # the feature gap warning
-        st.caption("⚠️ **Note:** Offline sketches provide Graphs, Counts & NPMI. Time-series and Entities are disabled in this mode.")
+        st.caption("ℹ️ **Note:** Offline sketches now support full analytics (Graphs, Time-Series, and Entities). Topic Modeling requires the uploaded sketch to contain document samples.")
         
         sketch_upload = st.file_uploader(
             "Upload Sketch File (.json)", 
