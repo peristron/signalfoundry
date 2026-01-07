@@ -962,7 +962,7 @@ def render_workflow_guide():
         Click the little arrow next to each file → configure text/date/category columns → hit individual **Start Scan**.  
         Use this only when you need granular control over messy CSVs.
 
-        **Path C – Black-Site / Enterprise Mode**  
+        **Path C – Grey-Site / Enterprise Mode**  
         Run `harvester.py` on the secure server → upload the resulting `.json` sketch here → full dashboard, zero raw text ever leaves the vault.
 
         ---
