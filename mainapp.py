@@ -946,7 +946,7 @@ def render_workflow_guide():
         ### 🌟 What is Signal Foundry?
         A zero-dependency, air-gap-ready intelligence engine that turns any pile of unstructured text (PDFs, CSVs, chat logs, leaked docs, PowerPoints, etc.) into pure mathematical signal in <45 seconds.
 
-        No training. No cloud (well: *little* cloud). No b*llshit~
+        No training. No cloud (unless you ask for it). No b*llshit~
 
         ---
 
@@ -954,7 +954,7 @@ def render_workflow_guide():
 
         **Path A – Instant Scan (99% of real work)**  
         1. Drag files into the sidebar (or paste URLs/text).  
-        2. If you have >1 file → hit **"⚡ Scan ALL X Items"** and walk away.  
+        2. If you have >1 file → hit **"⚡ Scan ALL Items"**.  
         3. If you want trends → pick a date column when prompted.  
         4. Done. You now have perfect visibility.
 
@@ -963,7 +963,8 @@ def render_workflow_guide():
         Use this only when you need granular control over messy CSVs.
 
         **Path C – Grey-Site / Enterprise Mode**  
-        Run `harvester.py` on the secure server → upload the resulting `.json` sketch here → full dashboard, zero raw text ever leaves the vault.
+        Run `harvester.py` on your secure server → upload the resulting `.json` sketch here.  
+        **Result:** You get the visualization dashboard (Counts, Graph, NPMI) without zero-trust raw text ever leaving the vault.
 
         ---
 
@@ -981,11 +982,11 @@ def render_workflow_guide():
 
         ### ⚡ Pro Tips (You will use these every time)
 
-        *   Multiple files? → Always use **"Scan ALL"** button.  
-        *   Graph is a blob? → Raise **Min Link Frequency**.  
-        *   Graph is empty islands? → Lower it.  
-        *   Seeing garbage words? → Add them to **Stopwords** box.  
-        *   Seeing "run" and "running"? → Turn on **Lemmatization**.  
+        *   **Cumulative Analysis:** Need to add more files to an existing scan? Uncheck **"Clear previous data"**. The main button will change to **"➕ Scan & Add"**. Perfect for merging daily logs.
+        *   **Graph is a blob?** → Raise **Min Link Frequency**.  
+        *   **Graph is empty islands?** → Lower it.  
+        *   **Seeing garbage words?** → Add them to **Stopwords** box.  
+        *   **Seeing "run" and "running"?** → Turn on **Lemmatization**.  
         *   **Need a "Chain of Custody"?** → Download the **Hybrid Signature** (QR+Heatmap). It encodes the file's unique cryptographic hash into the visualization. It proves this analysis is grounded in *this* specific document, and not an AI hallucination.
 
         **That’s it. Close this tab on day 2 and never open it again. You now own the room (or at least come into it with a unique, specific insight~).**
