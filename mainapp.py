@@ -1,7 +1,3 @@
-#  SIGNAL FOUNDRY (an UN-structured data intel engine)
-#  prod ready (v2.9 - robust graphics safety)
-#  arhitecture: hybrid streaming + "data refinery" utility
-#
 import io
 import os
 import re
@@ -218,9 +214,6 @@ class StreamScanner:
         self.global_counts.update(counts)
         self.global_bigrams.update(bigrams)
         self.total_rows_processed += rows
-
-    def add_topic_sample(self, doc_counts: Counter):
-        if not doc_counts: return
     
     # only updates doc_freqs if still sampling (prevents unnecessary work)    
     def add_topic_sample(self, doc_counts: Counter):
@@ -290,6 +283,129 @@ class StreamScanner:
         except Exception as e:
             logger.error(f"JSON Load Error: {e}")
             return False
+
+# 📈 maturity modeling logic (Multi-Persona)
+# ==========================================
+
+class MaturityAssessor:
+    """
+    Evaluates maturity based on linguistic markers using selectable 'Personas'.
+    Supports switching between General Business and EdTech/LMS contexts.
+    """
+    def __init__(self):
+        # The Library of Models
+        self.models = {
+            "🏫 EdTech & LMS Ops": {
+                "desc": "Evaluates LMS utilization from 'Digital Repository' (L1) to 'Connected Ecosystem' (L5).",
+                "levels": {
+                    1: {"name": "Digital Repository (Static)", "color": "#d62728", "terms": {
+                        "upload", "download", "pdf", "file", "syllabus", "login", "password", 
+                        "access", "content", "link", "ppt", "doc", "email", "submit", "paper", "static"
+                    }},
+                    2: {"name": "Managed Courseware (Tools)", "color": "#ff7f0e", "terms": {
+                        "quiz", "gradebook", "discussion", "rubric", "module", "assignment", 
+                        "calendar", "announcement", "feedback", "group", "template", "checklist", "forum"
+                    }},
+                    3: {"name": "Integrated (Connected)", "color": "#f7b731", "terms": {
+                        "lti", "integration", "api", "plugin", "interoperability", "tool", 
+                        "external", "sso", "vendor", "connect", "ecosystem", "zoom", "teams", "turnitin", "scorm"
+                    }},
+                    4: {"name": "Data-Informed (Adaptive)", "color": "#2ca02c", "terms": {
+                        "analytics", "engagement", "retention", "risk", "dashboard", "report", 
+                        "outcome", "competency", "mastery", "release", "adaptive", "personalized", "pathway", "agent"
+                    }},
+                    5: {"name": "Optimized (Strategic)", "color": "#9467bd", "terms": {
+                        "governance", "strategy", "accessibility", "udl", "equity", "inclusion", 
+                        "continuous", "scale", "innovation", "agency", "holistic", "success", "lifelong", "transform"
+                    }}
+                }
+            },
+            "🏢 General Business Ops": {
+                "desc": "Standard CMMI model: From 'Ad-Hoc' chaos to 'Optimized' strategy.",
+                "levels": {
+                    1: {"name": "Ad-Hoc / Reactive", "color": "#d62728", "terms": {
+                        "urgent", "fix", "panic", "broken", "late", "fail", "incident", "manual", "fire", "chaos"
+                    }},
+                    2: {"name": "Managed / Project", "color": "#ff7f0e", "terms": {
+                        "plan", "track", "project", "deadline", "schedule", "assign", "meeting", "status", "budget"
+                    }},
+                    3: {"name": "Defined / Standardized", "color": "#f7b731", "terms": {
+                        "standard", "process", "policy", "document", "compliance", "audit", "workflow", "consistent"
+                    }},
+                    4: {"name": "Measured / Quantitative", "color": "#2ca02c", "terms": {
+                        "metric", "kpi", "measure", "data", "analysis", "trend", "dashboard", "roi", "forecast"
+                    }},
+                    5: {"name": "Optimizing / Strategic", "color": "#9467bd", "terms": {
+                        "innovate", "strategy", "vision", "culture", "synergy", "scale", "optimize", "best-in-class"
+                    }}
+                }
+            }
+        }
+
+    def get_model_names(self) -> List[str]:
+        return list(self.models.keys())
+
+    def get_model_desc(self, name: str) -> str:
+        return self.models.get(name, {}).get("desc", "")
+
+    def assess(self, counts: Counter, model_name: str) -> Dict:
+        """Calculates weighted maturity score based on the selected model."""
+        if model_name not in self.models: return None
+        
+        levels = self.models[model_name]["levels"]
+        scores = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        total_hits = 0
+        
+        # Tally hits
+        for lvl, data in levels.items():
+            for term in data['terms']:
+                if term in counts:
+                    qty = counts[term]
+                    scores[lvl] += qty
+                    total_hits += qty
+
+        if total_hits == 0: return None
+
+        # Normalize & Calculate
+        distribution = {k: v / total_hits for k, v in scores.items()}
+        weighted_sum = sum(lvl * pct for lvl, pct in distribution.items())
+        dominant_level = max(distribution, key=distribution.get)
+        
+        return {
+            "overall_score": round(weighted_sum, 2),
+            "distribution": distribution,
+            "dominant_stage": levels[dominant_level],
+            "total_signals_found": total_hits,
+            "levels_ref": levels # passing back for renderer
+        }
+
+    def render_radar_chart(self, result: Dict):
+        """Generates a Radar/Spider chart."""
+        if not result: return None
+        
+        levels_ref = result['levels_ref']
+        categories = [levels_ref[i]['name'] for i in range(1, 6)]
+        values = [result['distribution'][i] for i in range(1, 6)]
+        
+        values += values[:1]
+        angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+        angles += angles[:1]
+
+        fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+        ax.fill(angles, values, color='#1f77b4', alpha=0.25)
+        ax.plot(angles, values, color='#1f77b4', linewidth=2)
+        ax.set_theta_offset(np.pi / 2)
+        ax.set_theta_direction(-1)
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories, fontsize=9)
+        ax.set_yticklabels([])
+        ax.spines["polar"].set_visible(False)
+        ax.grid(color='#444444', linestyle='--', alpha=0.5)
+        fig.patch.set_alpha(0.0)
+        ax.patch.set_alpha(0.0)
+        
+        return fig
+
 
 # session state init
 if 'sketch' not in st.session_state: st.session_state['sketch'] = StreamScanner()
@@ -977,6 +1093,7 @@ def render_workflow_guide():
         *   **Network Graph** → Context & causality. This is the closest thing to mind-reading text.  
         *   **Topic Modeling** → Automatic thematic buckets. NMF for short messages, LDA for long docs.  
         *   **Bayesian Sentiment** → The only sentiment you’re allowed to brief upstairs. Everything else is astrology~
+        *   **Maturity Model** → Assess organizational capability based on linguistic markers (e.g., Reactive vs. Strategic).
 
         ---
 
@@ -1698,7 +1815,7 @@ with tab_work:
         text_stats = calculate_text_stats(combined_counts, scanner.total_rows_processed)
         render_auto_insights(scanner, proc_conf)
         # main tabs
-        tab_main, tab_trend, tab_ent, tab_key = st.tabs(["☁️ Word Cloud & Stats", "📈 Trends", "👥 Entities", "🔑 Keyphrases"])
+        tab_main, tab_trend, tab_ent, tab_key, tab_mat = st.tabs(["☁️ Word Cloud & Stats", "📈 Trends", "👥 Entities", "🔑 Keyphrases", "🏆 Maturity"])
         
         with tab_main:
             if enable_sentiment:
@@ -1828,6 +1945,62 @@ with tab_work:
                     "Keyphrase Score": st.column_config.NumberColumn("Keyphrase Score", help="Mathematical Uniqueness. Higher = More 'Technical' and less 'Generic'.")
                 }
             )
+
+        with tab_mat:
+            st.subheader("🏆 Maturity Assessment Engine")
+            
+            # 1. Initialize and Get Options
+            assessor = MaturityAssessor()
+            model_options = assessor.get_model_names()
+            
+            # 2. UI Selector (Persona)
+            c_sel1, c_sel2 = st.columns([1, 3])
+            with c_sel1:
+                selected_model = st.selectbox("Select Organization Persona:", model_options, index=0)
+            with c_sel2:
+                st.info(f"ℹ️ {assessor.get_model_desc(selected_model)}")
+
+            # 3. Run Calculation
+            maturity_result = assessor.assess(combined_counts, selected_model)
+            
+            if maturity_result:
+                st.divider()
+                m_col1, m_col2 = st.columns([1, 2])
+                
+                with m_col1:
+                    score = maturity_result['overall_score']
+                    dom_stage = maturity_result['dominant_stage']
+                    gauge_color = dom_stage['color']
+                    
+                    st.metric("Maturity Score (1.0 - 5.0)", f"{score} / 5.0")
+                    st.markdown(f"#### Phase: <span style='color:{gauge_color}'>{dom_stage['name']}</span>", unsafe_allow_html=True)
+                    st.metric("Signal Density", f"{maturity_result['total_signals_found']} words", help="Count of relevant vocabulary words found.")
+
+                with m_col2:
+                    fig_mat = assessor.render_radar_chart(maturity_result)
+                    if fig_mat: st.pyplot(fig_mat, use_container_width=True)
+
+                # 4. Detailed Breakdown
+                st.subheader("🔍 Linguistic Drivers")
+                cols = st.columns(5)
+                levels_ref = maturity_result['levels_ref']
+                
+                for i in range(1, 6):
+                    with cols[i-1]:
+                        lvl_data = levels_ref[i]
+                        st.markdown(f"**L{i}: {lvl_data['name']}**")
+                        # Find intersection
+                        terms = lvl_data['terms']
+                        found = {t: combined_counts[t] for t in terms if t in combined_counts}
+                        if found:
+                            # Show top 3 words for this level
+                            top_words = sorted(found.items(), key=lambda x: x[1], reverse=True)[:4]
+                            for w, c in top_words:
+                                st.caption(f"{w} ({c})")
+                        else:
+                            st.caption("(No signals)")
+            else:
+                st.warning("No sufficient vocabulary found for this specific Maturity Model. Try switching Personas or adding more text data.")
 
         st.divider()
         
