@@ -1264,39 +1264,40 @@ def render_maturity_guide():
 
 
 def render_use_cases():
-    with st.expander("📖 (some more general) Use-cases", expanded=False):
+    with st.expander("📖 Playbook: High-Value Use Cases", expanded=False):
         st.markdown("""
-        ### (Some) use-cases for this unstructured data intelligence engine; you'll think of more...
+        ### 🎓 Specialized: Education & EdTech
         
-        #### 📈 Temporal & Trends
-        *   **Crisis Timeline:** Map high-severity words (e.g., "leak", "fail") over time to pinpoint incident starts.
-        *   **Campaign Tracking:** Watch how slogan adoption grows or fades week-over-week.
+        #### 1. The "Syllabus Audit" (Maturity Scan)
+        *   **Goal:** Determine if a department is truly "Modernizing" or just digitizing old habits.
+        *   **Action:** Bulk scan 50 syllabi/course descriptions using the **EdTech Persona**.
+        *   **Signal:**
+            *   High **L1 (Repository)** scores = The LMS is just a file dump.
+            *   High **L3 (Integrated)** scores = They are actually using the ecosystem tools.
         
-        #### 🏢 Corporate & Strategic
-        *   **Stakeholder Mapping (NER):** Instantly see *Who* and *What* are driving the conversation.
-        *   **Customer Feedback:** "Diffing" analysis to see what Engineering words are distinct from Sales words.
-        *   **M&A Due Diligence:** Scanning Data Rooms for liability terms without reading files.
-
-        #### 🔬 Research & Forensics
-        *   **Signal vs Noise:** TF-IDF extraction to ignore frequent words and find unique cluster identifiers.
-        *   **Literary Forensics:** Vocabulary diversity and phrase patterns.
-        *   **Unknown Unknowns:** Surface recurring challenges via bigram maps.
-
-        #### 🛡️ Security & Privacy
-        *   **The "Privacy Proxy":** Refining data locally before sending sanitized stats to LLMs.
-        *   **Insider Threat:** Pattern matching on communication logs.
+        #### 2. Vendor RFP Analysis
+        *   **Goal:** Cut through sales fluff.
+        *   **Action:** Scan a vendor's whitepaper or proposal.
+        *   **Signal:** Do they speak **L2 (Features/Tools)** or **L5 (Partnership/Success)**? A strategic partner should score >3.5.
         
         ---
-        #### 🎓 Education: LMS Discussion Forums
-        *Insights into what a group of students are discussing:*
-        *   Identifying the most common topics and themes students are talking about.
-        *   Surfacing frequently asked questions and recurring challenges.
-        *   Detecting sentiment trends (e.g., frustration, excitement, confusion) across the class.
-        *   Visualizing connections between concepts or issues using network graphs.
-        *   Highlighting emerging issues or "unknown unknowns" (e.g., a misunderstood assignment).
-        *   Comparing discussion dynamics before and after key events (e.g., exams).
-        *   Summarizing participation patterns (who is most/least active).
-        *   Providing instructors with actionable summaries for targeted intervention.
+
+        ### 🏢 General: Corporate & Intelligence
+        
+        #### 3. Strategic Alignment Check
+        *   **Goal:** See if the IT Department aligns with the C-Suite.
+        *   **Action:** Scan the CTO's emails vs. the CEO's annual letter.
+        *   **Signal:** If the CEO is L5 (Vision) and IT is L1 (Firefighting), you have an execution gap.
+
+        #### 4. "Chain of Custody" Verification
+        *   **Goal:** Prove that a visualization came from *this* specific file.
+        *   **Action:** Generate the **Hybrid Signature** (QR Code) in the Graph tab.
+        *   **Value:** Encrypts the document hash into the image. If the screenshot leaks, you can prove exactly which source file generated it.
+
+        #### 5. Crisis Timeline Reconstruction
+        *   **Goal:** Pinpoint when a project went off the rails.
+        *   **Action:** Scan weekly status reports with the **Time-Travel Slider**.
+        *   **Signal:** Watch for the crossover point where **"Plan" (L2)** words drop and **"Fix/Urgent" (L1)** words spike.
         """)
 
 def render_analyst_help():
