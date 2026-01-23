@@ -1229,6 +1229,37 @@ def render_neurotech_case_study():
         *   **The Insight:** Identifies the funding sources (DARP@) vs. the regulatory blockers (Geneva).
         """, unsafe_allow_html=True)
 
+def render_maturity_guide():
+    with st.expander("🏆 Guide: Understanding the Maturity Models", expanded=False):
+        st.markdown("""
+        ### What is the Maturity Engine?
+        While standard analytics count *what* words appear, the Maturity Engine measures the **intent and capability** behind those words. It compares your text against known frameworks of organizational development.
+
+        ### 🎭 The Personas
+        Because a University operates differently than a Hedge Fund, this tool allows you to select a "Persona":
+        
+        #### 1. 🏫 EdTech & LMS Ops (The "LMS Maturity" Model)
+        *Designed for Higher Ed, K12, and Instructional Design.*
+        *   **L1 - Digital Repository:** Using the LMS as a file dump (PDFs, uploads).
+        *   **L2 - Managed Tools:** Using built-in features (Quizzes, Gradebook) but in isolation.
+        *   **L3 - Integrated:** Connected systems (LTI, API, Plugins).
+        *   **L4 - Adaptive:** Data-driven, personalized learning paths, mastery tracking.
+        *   **L5 - Strategic:** Focus on Governance, Equity, UDL, and Institutional Strategy.
+
+        #### 2. 🏢 General Business Ops (The "CMMI" Model)
+        *Designed for Corporate, Non-Profit, and General Operations.*
+        *   **L1 - Ad-Hoc:** Reactive language (fix, panic, urgent).
+        *   **L2 - Managed:** Project language (deadline, track, plan).
+        *   **L3 - Defined:** Process language (standard, policy, compliance).
+        *   **L4 - Measured:** Quantitative language (KPI, metric, variance).
+        *   **L5 - Optimized:** Strategic language (innovation, culture, ecosystem).
+
+        ### 🧠 How to Read the Radar Chart
+        *   **Round Shape:** Indicates a balanced organization that talks about Strategy (L5) as much as it talks about Execution (L2).
+        *   **Spike Shape:** Indicates a skew. 
+            *   *Example:* A spike at **L4 (Adaptive)** but zero at **L5 (Strategic)** suggests a team that is technically proficient but lacks a cohesive governance strategy.
+        """)
+
 
 def render_use_cases():
     with st.expander("📖 (some more general) Use-cases", expanded=False):
