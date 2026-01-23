@@ -2011,6 +2011,13 @@ with tab_work:
                 with m_col2:
                     fig_mat = assessor.render_radar_chart(maturity_result)
                     if fig_mat: st.pyplot(fig_mat, use_container_width=True)
+                    
+                    # --- added, re: maturity model---
+                    st.caption(
+                        "**Analyst Tip:** A balanced polygon (round) indicates alignment between Strategy and Execution. "
+                        "A sharp 'spike' indicates a capability gap in adjacent areas."
+                    )
+                    # -----------
 
                 # 4. Detailed Breakdown
                 st.subheader("🔍 Linguistic Drivers")
@@ -2021,7 +2028,7 @@ with tab_work:
                     with cols[i-1]:
                         lvl_data = levels_ref[i]
                         st.markdown(f"**L{i}: {lvl_data['name']}**")
-                        # Find intersection
+                        # finds intersection
                         terms = lvl_data['terms']
                         found = {t: combined_counts[t] for t in terms if t in combined_counts}
                         if found:
