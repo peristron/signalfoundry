@@ -284,16 +284,19 @@ class StreamScanner:
             logger.error(f"JSON Load Error: {e}")
             return False
 
-# 📈 maturity modeling logic (Multi-Persona)
+# 📈 maturity modeling logic (Multi-persona)
+# ==========================================
+
+# 📈 maturity modeling logic (multi-Persona)
 # ==========================================
 
 class MaturityAssessor:
     """
     Evaluates maturity based on linguistic markers using selectable 'Personas'.
-    Supports switching between General Business and EdTech/LMS contexts.
+    Supports switching between Business, EdTech, and Policy contexts.
     """
     def __init__(self):
-        # The Library of Models
+        # library of models
         self.models = {
             "🏫 EdTech & LMS Ops": {
                 "desc": "Evaluates LMS utilization from 'Digital Repository' (L1) to 'Connected Ecosystem' (L5).",
@@ -337,6 +340,31 @@ class MaturityAssessor:
                     }},
                     5: {"name": "Optimizing / Strategic", "color": "#9467bd", "terms": {
                         "innovate", "strategy", "vision", "culture", "synergy", "scale", "optimize", "best-in-class"
+                    }}
+                }
+            },
+            "⚖️ Policy & Governance": {
+                "desc": "Evaluates policy maturity from 'Reactive/Enforcement' (L1) to 'Systemic/Holistic' (L5).",
+                "levels": {
+                    1: {"name": "Enforcement / Reactive", "color": "#d62728", "terms": {
+                        "violation", "sanction", "ban", "prohibit", "force", "threat", "danger", 
+                        "emergency", "crisis", "incident", "restriction", "penalty", "risk", "security"
+                    }},
+                    2: {"name": "Procedural / Draft", "color": "#ff7f0e", "terms": {
+                        "draft", "proposal", "clause", "article", "amendment", "review", 
+                        "committee", "meeting", "agenda", "timeline", "signature", "ratify", "consensus"
+                    }},
+                    3: {"name": "Operational / Implemented", "color": "#f7b731", "terms": {
+                        "framework", "mechanism", "guideline", "standard", "monitor", 
+                        "verify", "compliance", "report", "mandate", "coordination", "treaty"
+                    }},
+                    4: {"name": "Evidence-Based / Analysis", "color": "#2ca02c", "terms": {
+                        "assessment", "evaluation", "impact", "data", "research", "finding", 
+                        "indicator", "measure", "trend", "forecast", "efficacy", "evidence"
+                    }},
+                    5: {"name": "Systemic / Sustainable", "color": "#9467bd", "terms": {
+                        "sustainable", "resilient", "holistic", "global", "ecosystem", 
+                        "peace", "development", "cooperation", "future", "inclusive", "norms", "universal"
                     }}
                 }
             }
