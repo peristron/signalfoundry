@@ -1235,29 +1235,31 @@ def render_maturity_guide():
         ### What is the Maturity Engine?
         While standard analytics count *what* words appear, the Maturity Engine measures the **intent and capability** behind those words. It compares your text against known frameworks of organizational development.
 
-        ### 🎭 The Personas
-        Because a University operates differently than a Hedge Fund, this tool allows you to select a "Persona":
+        ### 🎭 The Personas (Context Matters!)
+        Words change meaning based on context. You must select the model that matches your document's intent.
         
-        #### 1. 🏫 EdTech & LMS Ops (The "LMS Maturity" Model)
-        *Designed for Higher Ed, K12, and Instructional Design.*
-        *   **L1 - Digital Repository:** Using the LMS as a file dump (PDFs, uploads).
-        *   **L2 - Managed Tools:** Using built-in features (Quizzes, Gradebook) but in isolation.
-        *   **L3 - Integrated:** Connected systems (LTI, API, Plugins).
-        *   **L4 - Adaptive:** Data-driven, personalized learning paths, mastery tracking.
-        *   **L5 - Strategic:** Focus on Governance, Equity, UDL, and Institutional Strategy.
+        #### 1. 🏫 EdTech & LMS Ops
+        *Best for: Course designs, Syllabi, Instructional Strategy docs.*
+        *   **L1 (Repository):** "Upload," "File," "PDF." (Static content).
+        *   **L3 (Integrated):** "LTI," "API," "Plugin." (Connected systems).
+        *   **L5 (Strategic):** "Equity," "UDL," "Governance." (Institutional impact).
 
-        #### 2. 🏢 General Business Ops (The "CMMI" Model)
-        *Designed for Corporate, Non-Profit, and General Operations.*
-        *   **L1 - Ad-Hoc:** Reactive language (fix, panic, urgent).
-        *   **L2 - Managed:** Project language (deadline, track, plan).
-        *   **L3 - Defined:** Process language (standard, policy, compliance).
-        *   **L4 - Measured:** Quantitative language (KPI, metric, variance).
-        *   **L5 - Optimized:** Strategic language (innovation, culture, ecosystem).
+        #### 2. 🏢 General Business Ops (CMMI)
+        *Best for: Corporate reports, Project logs, Emails.*
+        *   **L1 (Reactive):** "Urgent," "Fix," "Panic." (Heroic effort).
+        *   **L4 (Measured):** "KPI," "Variance," "ROI." (Data-driven).
+        
+        > **⚠️ Warning:** If you scan a Military report with the EdTech model, the word *"Risk"* will be scored as "Student Analytics" (Level 4) rather than "Security Threat" (Level 1). Always match the Persona to the File.
+
+        ### 🧮 How is the Score Calculated?
+        The score is a **Weighted Average** of the vocabulary detected.
+        *   *Formula:* `(Count_L1 x 1) + (Count_L2 x 2) ... / Total_Words`
+        *   *Example:* A document with equal parts "Panic" (L1) and "Strategy" (L5) will land in the middle (L3).
+        *   **Implication:** To get a 5.0, a document must be *consistently* strategic, not just use a few buzzwords.
 
         ### 🧠 How to Read the Radar Chart
-        *   **Round Shape:** Indicates a balanced organization that talks about Strategy (L5) as much as it talks about Execution (L2).
-        *   **Spike Shape:** Indicates a skew. 
-            *   *Example:* A spike at **L4 (Adaptive)** but zero at **L5 (Strategic)** suggests a team that is technically proficient but lacks a cohesive governance strategy.
+        *   **Round Shape:** Alignment. The organization executes (L2) as well as it strategizes (L5).
+        *   **Spike Shape:** Gap. A spike at L4 but zero at L5 suggests a team that has great dashboards but lacks a unified vision.
         """)
 
 
