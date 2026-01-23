@@ -98,3 +98,5 @@ Status
 Production v2.9
 Used in real investigations.
 May cause multiple "wait-what!" moments in under two minutes~
+
+Signal Foundry is a linguistic MRI machine that ignores the official narrative to reveal the skeletal structure of intent, maturity, and risk hidden within your data
