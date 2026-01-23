@@ -1595,9 +1595,10 @@ with st.sidebar:
 # --- TABS LAYOUT ---
 tab_work, tab_learn = st.tabs(["🚀 Workspace", "📚 Learn (How to Use & Use-Cases)"])
 
-# 1. THE LEARNING TAB (Guides & Examples)
+# 1. THE LEARNING TAB (Guides, Examples)
 with tab_learn:
     render_workflow_guide()
+    render_maturity_guide()  # added
     render_use_cases()
     render_neurotech_case_study()
     render_lit_case_study()
