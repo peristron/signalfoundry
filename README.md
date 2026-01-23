@@ -7,16 +7,17 @@ Most "intelligence" tools drown you in **how** — elaborate mechanisms, 400-pag
 Signal Foundry was built for one purpose: **rip away the "how" and expose the "why".**
 
 In <60 seconds it shows you:
-- Who actually matters (entities)
-- What they’re really talking about (NPMI sticky phrases)
-- What they’re deliberately trying to hide (network graph clusters that refuse to connect)
+- **Who** actually matters (Entities & Stakeholders)
+- **What** they’re really talking about (NPMI sticky phrases)
+- **Where** they sit on the evolutionary scale (Maturity Modeling)
+- **Why** they are saying it (Network graph clusters that refuse to connect)
 
 Because the **why** always leaks through the terminology, the funding sources, and the topological shape of the language — never through the official narrative.
 
-Current Version: v2.9 — Production, Air-Gap Ready, Graphics-Hardened
+**Current Version:** v2.9 — Production, Air-Gap Ready, Graphics-Hardened
 
 ### Core Thesis
-**Every act of motivated obfuscation leaves a mathematical fingerprint - and this's true for...accidental obfuscation too~.**  
+**Every act of motivated obfuscation leaves a mathematical fingerprint — and this is true for accidental incompetence too.**  
 Signal Foundry is designed from the ground up to detect that fingerprint and make it hard to ignore.
 
 ### Key Capabilities
@@ -31,31 +32,29 @@ Signal Foundry is designed from the ground up to detect that fingerprint and mak
 
 | Feature                  | What It Actually Reveals                                      |
 |--------------------------|----------------------------------------------------------------|
-| NPMI Phrases             | The real "terms of art" that betray intent ("dual use", "cognitive liberty", "chain of custody") |
-| Polymorphic NER          | Who benefits, who funds, who executes |
-| Network Graph            | Topological proof of separate intent clusters in the same document ("performance enhancement" vs "interrogation") |
-| TF-IDF Keyphrases        | Unique technical DNA that survives boilerplate removal |
-| Entities + Graph together| Reveals: "Whose interest is actually being served here?" |
+| **Maturity Engine**      | **NEW:** Scores organizational capability (1.0–5.0) using linguistic personas (EdTech vs. Policy vs. Corp). |
+| NPMI Phrases             | The real "terms of art" that betray intent ("dual use", "cognitive liberty", "chain of custody"). |
+| Polymorphic NER          | Who benefits, who funds, who executes. |
+| Network Graph            | Topological proof of separate intent clusters in the same document ("performance enhancement" vs "interrogation"). |
+| TF-IDF Keyphrases        | Unique technical DNA that survives boilerplate removal. |
+| Entities + Graph         | Reveals: "Whose interest is actually being served here?" |
 
-**3. Hybrid Architecture**
+**3. Multi-Persona Architecture**
 
-- Interactive Mode (`mainapp.py`): Drag-drop Streamlit interface for instant insight
-- Headless Harvester (harvester.py): Process 10M+ row datasets on secure servers. Generates a lightweight statistical sketch (NPMI/Counts/Graph only) to maximize privacy and speed
-- Additive Scanning: Merge multiple files/leaks into a single intelligence picture without resetting
+Context changes meaning. The word *"Risk"* means one thing in a University (At-Risk Students) and another in the UN (Security Threat).
+- **Selectable Personas:** Switch instantly between **EdTech/LMS Ops**, **General Business**, and **Policy & Governance** models to score documents against the correct framework.
 
 **4. Provenance & Chain of Custody**
 
-Hybrid Signature: A scannable QR-overlaid heatmap that cryptographically binds the visualization to the exact dataset hash.  
-Proof that your insight came from *this* document, not an AI hallucination.
+- **Hybrid Signature:** A scannable QR-overlaid heatmap that cryptographically binds the visualization to the exact dataset hash. Proof that your insight came from *this* document, not an AI hallucination.
 
 ### Real-World Use Cases (Where It Hurts Them)
 
-- Mapping hidden intent in defense/neurotech policy documents
-- Detecting when "safety" language is being weaponized as cover
-- Identifying which three entities keep appearing together across 400 pages
-- Seeing that "non-invasive" and "transcranial" are the real threat vector, not sci-fi implants
-- Literary/digital forensics — instantly spotting ghostwriting or translated artifacts
-- Crisis timeline reconstruction — watching "leak" and "failure" spike three weeks before the public story breaks
+- **The Support Audit:** Scanning 5,000 LMS support tickets to prove an institution is stuck in "Reactive/L1" hell despite claiming "Strategic/L5" vision.
+- **Crisis Reconstruction:** Watching "leak" and "failure" spike three weeks before the public story breaks via the Time-Travel slider.
+- **Policy decoding:** Identifying which three entities keep appearing together across 400 pages of defense policy.
+- **Strategic Alignment:** Scanning the CTO's emails vs. the CEO's annual letter to spot execution gaps.
+- **Forensics:** Seeing that "non-invasive" and "transcranial" are the real threat vector, not sci-fi implants.
 
 ### Installation
 
@@ -63,7 +62,6 @@ Proof that your insight came from *this* document, not an AI hallucination.
 git clone https://github.com/yourusername/signal-foundry.git
 cd signal-foundry
 pip install -r requirements.txt
-
 
 Create .streamlit/secrets.toml:
 
@@ -87,7 +85,7 @@ python harvester.py --input "classified_dataset.csv" --col "text" --output "sket
 
 Supported Formats
 
-CSV, Excel, PDF, PowerPoint, VTT, JSON/JSONL, URLs, raw text — whatever you’ve got.
+CSV, Excel, PDF, PowerPoint, VTT (Transcripts), JSON/JSONL, URLs, raw text.
 Dependencies (Graceful Degradation)
 
 Works with just pandas + streamlit.
