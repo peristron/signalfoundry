@@ -2163,8 +2163,8 @@ with tab_work:
             with c_sel2:
                 st.info(f"ℹ️ {assessor.get_model_desc(selected_model)}")
 
-            # 3. Run Calculation
-            maturity_result = assessor.assess(combined_counts, selected_model)
+            # 3. Run Calculation (now uses both unigrams + bigrams)
+            maturity_result = assessor.assess(combined_counts, scanner.global_bigrams, selected_model)
             
             if maturity_result:
                 st.divider()
