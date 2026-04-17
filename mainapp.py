@@ -294,78 +294,190 @@ class MaturityAssessor:
     """
     Evaluates maturity based on linguistic markers using selectable 'Personas'.
     Supports switching between Business, EdTech, and Policy contexts.
+
+    Now supports:
+    - Single-word tokens (unigrams)
+    - Multi-word phrases (bigrams), via the scanner's global_bigrams
     """
     def __init__(self):
         # library of models
+        # NOTE: each level can now optionally define:
+        #   - "terms": set[str]          -> single tokens
+        #   - "phrases": list[str]       -> multi-word phrases (space-separated)
         self.models = {
             "🏫 EdTech & LMS Ops": {
                 "desc": "Evaluates LMS utilization from 'Digital Repository' (L1) to 'Connected Ecosystem' (L5).",
                 "levels": {
-                    1: {"name": "Digital Repository (Static)", "color": "#d62728", "terms": {
-                        "upload", "download", "pdf", "file", "syllabus", "login", "password", 
-                        "access", "content", "link", "ppt", "doc", "email", "submit", "paper", "static"
-                    }},
-                    2: {"name": "Managed Courseware (Tools)", "color": "#ff7f0e", "terms": {
-                        "quiz", "gradebook", "discussion", "rubric", "module", "assignment", 
-                        "calendar", "announcement", "feedback", "group", "template", "checklist", "forum"
-                    }},
-                    3: {"name": "Integrated (Connected)", "color": "#f7b731", "terms": {
-                        "lti", "integration", "api", "plugin", "interoperability", "tool", 
-                        "external", "sso", "vendor", "connect", "ecosystem", "zoom", "teams", "turnitin", "scorm"
-                    }},
-                    4: {"name": "Data-Informed (Adaptive)", "color": "#2ca02c", "terms": {
-                        "analytics", "engagement", "retention", "risk", "dashboard", "report", 
-                        "outcome", "competency", "mastery", "release", "adaptive", "personalized", "pathway", "agent"
-                    }},
-                    5: {"name": "Optimized (Strategic)", "color": "#9467bd", "terms": {
-                        "governance", "strategy", "accessibility", "udl", "equity", "inclusion", 
-                        "continuous", "scale", "innovation", "agency", "holistic", "success", "lifelong", "transform"
-                    }}
+                    1: {
+                        "name": "Digital Repository (Static)",
+                        "color": "#d62728",
+                        "terms": {
+                            "upload", "download", "pdf", "file", "syllabus", "login", "password",
+                            "access", "content", "link", "ppt", "doc", "email", "submit", "paper", "static"
+                        },
+                        "phrases": [
+                            "course shell", "file repository", "content dump"
+                        ]
+                    },
+                    2: {
+                        "name": "Managed Courseware (Tools)",
+                        "color": "#ff7f0e",
+                        "terms": {
+                            "quiz", "gradebook", "discussion", "rubric", "module", "assignment",
+                            "calendar", "announcement", "feedback", "group", "template", "checklist", "forum"
+                        },
+                        "phrases": [
+                            "online quiz", "assignment submission", "discussion forum"
+                        ]
+                    },
+                    3: {
+                        "name": "Integrated (Connected)",
+                        "color": "#f7b731",
+                        "terms": {
+                            "lti", "integration", "api", "plugin", "interoperability", "tool",
+                            "external", "sso", "vendor", "connect", "ecosystem", "zoom", "teams", "turnitin", "scorm"
+                        },
+                        "phrases": [
+                            "learning tools", "third party", "external tool", "deep integration"
+                        ]
+                    },
+                    4: {
+                        "name": "Data-Informed (Adaptive)",
+                        "color": "#2ca02c",
+                        "terms": {
+                            "analytics", "engagement", "retention", "risk", "dashboard", "report",
+                            "outcome", "competency", "mastery", "release", "adaptive", "personalized", "pathway", "agent"
+                        },
+                        "phrases": [
+                            "learning analytics", "course analytics", "early alert", "release conditions"
+                        ]
+                    },
+                    5: {
+                        "name": "Optimized (Strategic)",
+                        "color": "#9467bd",
+                        "terms": {
+                            "governance", "strategy", "accessibility", "udl", "equity", "inclusion",
+                            "continuous", "scale", "innovation", "agency", "holistic", "success", "lifelong", "transform"
+                        },
+                        "phrases": [
+                            "governance framework", "continuous improvement", "student success", "institutional strategy"
+                        ]
+                    }
                 }
             },
             "🏢 General Business Ops": {
                 "desc": "Standard CMMI model: From 'Ad-Hoc' chaos to 'Optimized' strategy.",
                 "levels": {
-                    1: {"name": "Ad-Hoc / Reactive", "color": "#d62728", "terms": {
-                        "urgent", "fix", "panic", "broken", "late", "fail", "incident", "manual", "fire", "chaos"
-                    }},
-                    2: {"name": "Managed / Project", "color": "#ff7f0e", "terms": {
-                        "plan", "track", "project", "deadline", "schedule", "assign", "meeting", "status", "budget"
-                    }},
-                    3: {"name": "Defined / Standardized", "color": "#f7b731", "terms": {
-                        "standard", "process", "policy", "document", "compliance", "audit", "workflow", "consistent"
-                    }},
-                    4: {"name": "Measured / Quantitative", "color": "#2ca02c", "terms": {
-                        "metric", "kpi", "measure", "data", "analysis", "trend", "dashboard", "roi", "forecast"
-                    }},
-                    5: {"name": "Optimizing / Strategic", "color": "#9467bd", "terms": {
-                        "innovate", "strategy", "vision", "culture", "synergy", "scale", "optimize", "best-in-class"
-                    }}
+                    1: {
+                        "name": "Ad-Hoc / Reactive",
+                        "color": "#d62728",
+                        "terms": {
+                            "urgent", "fix", "panic", "broken", "late", "fail", "incident", "manual", "fire", "chaos"
+                        },
+                        "phrases": [
+                            "fire drill", "last minute", "workaround"
+                        ]
+                    },
+                    2: {
+                        "name": "Managed / Project",
+                        "color": "#ff7f0e",
+                        "terms": {
+                            "plan", "track", "project", "deadline", "schedule", "assign", "meeting", "status", "budget"
+                        },
+                        "phrases": [
+                            "project plan", "status report", "project charter"
+                        ]
+                    },
+                    3: {
+                        "name": "Defined / Standardized",
+                        "color": "#f7b731",
+                        "terms": {
+                            "standard", "process", "policy", "document", "compliance", "audit", "workflow", "consistent"
+                        },
+                        "phrases": [
+                            "standard operating", "standardized process", "policy framework"
+                        ]
+                    },
+                    4: {
+                        "name": "Measured / Quantitative",
+                        "color": "#2ca02c",
+                        "terms": {
+                            "metric", "kpi", "measure", "data", "analysis", "trend", "dashboard", "roi", "forecast"
+                        },
+                        "phrases": [
+                            "key performance indicator", "data driven", "variance analysis"
+                        ]
+                    },
+                    5: {
+                        "name": "Optimizing / Strategic",
+                        "color": "#9467bd",
+                        "terms": {
+                            "innovate", "strategy", "vision", "culture", "synergy", "scale", "optimize", "best-in-class"
+                        },
+                        "phrases": [
+                            "strategic roadmap", "continuous improvement", "organizational transformation"
+                        ]
+                    }
                 }
             },
             "⚖️ Policy & Governance": {
                 "desc": "Evaluates policy maturity from 'Reactive/Enforcement' (L1) to 'Systemic/Holistic' (L5).",
                 "levels": {
-                    1: {"name": "Enforcement / Reactive", "color": "#d62728", "terms": {
-                        "violation", "sanction", "ban", "prohibit", "force", "threat", "danger", 
-                        "emergency", "crisis", "incident", "restriction", "penalty", "risk", "security"
-                    }},
-                    2: {"name": "Procedural / Draft", "color": "#ff7f0e", "terms": {
-                        "draft", "proposal", "clause", "article", "amendment", "review", 
-                        "committee", "meeting", "agenda", "timeline", "signature", "ratify", "consensus"
-                    }},
-                    3: {"name": "Operational / Implemented", "color": "#f7b731", "terms": {
-                        "framework", "mechanism", "guideline", "standard", "monitor", 
-                        "verify", "compliance", "report", "mandate", "coordination", "treaty"
-                    }},
-                    4: {"name": "Evidence-Based / Analysis", "color": "#2ca02c", "terms": {
-                        "assessment", "evaluation", "impact", "data", "research", "finding", 
-                        "indicator", "measure", "trend", "forecast", "efficacy", "evidence"
-                    }},
-                    5: {"name": "Systemic / Sustainable", "color": "#9467bd", "terms": {
-                        "sustainable", "resilient", "holistic", "global", "ecosystem", 
-                        "peace", "development", "cooperation", "future", "inclusive", "norms", "universal"
-                    }}
+                    1: {
+                        "name": "Enforcement / Reactive",
+                        "color": "#d62728",
+                        "terms": {
+                            "violation", "sanction", "ban", "prohibit", "force", "threat", "danger",
+                            "emergency", "crisis", "incident", "restriction", "penalty", "risk", "security"
+                        },
+                        "phrases": [
+                            "zero tolerance", "strict enforcement"
+                        ]
+                    },
+                    2: {
+                        "name": "Procedural / Draft",
+                        "color": "#ff7f0e",
+                        "terms": {
+                            "draft", "proposal", "clause", "article", "amendment", "review",
+                            "committee", "meeting", "agenda", "timeline", "signature", "ratify", "consensus"
+                        },
+                        "phrases": [
+                            "draft policy", "working group", "policy proposal"
+                        ]
+                    },
+                    3: {
+                        "name": "Operational / Implemented",
+                        "color": "#f7b731",
+                        "terms": {
+                            "framework", "mechanism", "guideline", "standard", "monitor",
+                            "verify", "compliance", "report", "mandate", "coordination", "treaty"
+                        },
+                        "phrases": [
+                            "compliance framework", "implementation plan", "governance mechanism"
+                        ]
+                    },
+                    4: {
+                        "name": "Evidence-Based / Analysis",
+                        "color": "#2ca02c",
+                        "terms": {
+                            "assessment", "evaluation", "impact", "data", "research", "finding",
+                            "indicator", "measure", "trend", "forecast", "efficacy", "evidence"
+                        },
+                        "phrases": [
+                            "impact assessment", "evidence based", "data driven"
+                        ]
+                    },
+                    5: {
+                        "name": "Systemic / Sustainable",
+                        "color": "#9467bd",
+                        "terms": {
+                            "sustainable", "resilient", "holistic", "global", "ecosystem",
+                            "peace", "development", "cooperation", "future", "inclusive", "norms", "universal"
+                        },
+                        "phrases": [
+                            "holistic approach", "systemic change", "sustainable development"
+                        ]
+                    }
                 }
             }
         }
@@ -376,45 +488,73 @@ class MaturityAssessor:
     def get_model_desc(self, name: str) -> str:
         return self.models.get(name, {}).get("desc", "")
 
-    def assess(self, counts: Counter, model_name: str) -> Dict:
-        """Calculates weighted maturity score based on the selected model."""
-        if model_name not in self.models: return None
-        
+    def assess(self, counts: Counter, bigrams: Counter, model_name: str) -> Dict:
+        """
+        Calculates weighted maturity score based on the selected model.
+
+        counts  = unigram frequencies (already cleaned & filtered)
+        bigrams = bigram frequencies as a Counter({('learning', 'analytics'): 7, ...})
+        """
+        if model_name not in self.models:
+            return None
+
         levels = self.models[model_name]["levels"]
-        scores = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
-        total_hits = 0
-        
-        # Tally hits
+        scores = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0}
+        total_hits = 0.0
+
+        # 1) Unigram hits (single words)
         for lvl, data in levels.items():
-            for term in data['terms']:
-                if term in counts:
-                    qty = counts[term]
+            terms = data.get("terms", set())
+            for term in terms:
+                qty = counts.get(term, 0)
+                if qty > 0:
                     scores[lvl] += qty
                     total_hits += qty
 
-        if total_hits == 0: return None
+        # 2) Bigram / phrase hits
+        # Build a simple lookup from "word1 word2" -> count
+        phrase_counts: Dict[str, int] = {}
+        for (w1, w2), freq in bigrams.items():
+            phrase = f"{w1} {w2}"
+            phrase_counts[phrase] = phrase_counts.get(phrase, 0) + freq
+
+        # Apply a small weight multiplier so phrases matter, but don't dominate.
+        PHRASE_WEIGHT = 1.5
+
+        for lvl, data in levels.items():
+            phrases = data.get("phrases", []) or []
+            for phrase in phrases:
+                freq = phrase_counts.get(phrase, 0)
+                if freq > 0:
+                    weighted = freq * PHRASE_WEIGHT
+                    scores[lvl] += weighted
+                    total_hits += weighted
+
+        if total_hits == 0:
+            return None
 
         # Normalize & Calculate
         distribution = {k: v / total_hits for k, v in scores.items()}
         weighted_sum = sum(lvl * pct for lvl, pct in distribution.items())
         dominant_level = max(distribution, key=distribution.get)
-        
+
         return {
             "overall_score": round(weighted_sum, 2),
             "distribution": distribution,
             "dominant_stage": levels[dominant_level],
-            "total_signals_found": total_hits,
-            "levels_ref": levels # passing back for renderer
+            "total_signals_found": int(total_hits),
+            "levels_ref": levels  # passing back for renderer
         }
 
     def render_radar_chart(self, result: Dict):
         """Generates a Radar/Spider chart."""
-        if not result: return None
-        
+        if not result:
+            return None
+
         levels_ref = result['levels_ref']
         categories = [levels_ref[i]['name'] for i in range(1, 6)]
         values = [result['distribution'][i] for i in range(1, 6)]
-        
+
         values += values[:1]
         angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
         angles += angles[:1]
@@ -431,7 +571,7 @@ class MaturityAssessor:
         ax.grid(color='#444444', linestyle='--', alpha=0.5)
         fig.patch.set_alpha(0.0)
         ax.patch.set_alpha(0.0)
-        
+
         return fig
 
 
