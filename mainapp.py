@@ -158,6 +158,8 @@ class ProcessingConfig:
     use_lemmatization: bool = False
     translate_map: Dict[int, Optional[int]] = field(default_factory=dict)
     stopwords: Set[str] = field(default_factory=set)
+    excluded_speakers: Set[str] = field(default_factory=set)
+    partial_speaker_match: bool = False
 
 
 # 🛡️ security and validation utils
@@ -667,6 +669,110 @@ def build_phrase_pattern(phrases: List[str]) -> Optional[re.Pattern]:
     if not escaped: return None
     return re.compile(rf"\b(?:{'|'.join(escaped)})\b", flags=re.IGNORECASE)
 
+
+def normalize_speaker_name(raw: str) -> str:
+    if not isinstance(raw, str):
+        return ""
+    text = raw.replace("\ufeff", " ").replace("\ufffd", " ")
+    text = "".join(ch if ch >= " " else " " for ch in text)
+    text = html.unescape(text).lower()
+    text = re.sub(r"\s+", " ", text)
+    return text.strip(" \t\r\n:-–—")
+
+def parse_speaker_exclusions(raw: str) -> Set[str]:
+    if not raw:
+        return set()
+    entries = raw.replace("\n", ",").split(",")
+    return {
+        normalized
+        for item in entries
+        if (normalized := normalize_speaker_name(item))
+    }
+
+def extract_speaker_label(text: str) -> Tuple[Optional[str], str]:
+    """
+    Extract transcript-style speaker labels such as:
+    - Speaker 18 (Rikki): text
+    - Bob Smith: text
+    - Participant A: text
+
+    Returns (speaker, utterance). If no safe label is found, speaker is None.
+    This intentionally detects labels, not real-world identities.
+    """
+    if not isinstance(text, str) or ":" not in text:
+        return None, text
+
+    speaker, utterance = text.split(":", 1)
+    speaker = speaker.strip()
+    if not speaker or len(speaker) > MAX_SPEAKER_NAME_LENGTH:
+        return None, text
+    if "-->" in speaker or speaker.isdigit():
+        return None, text
+    if not re.search(r"[A-Za-z]", speaker):
+        return None, text
+
+    return speaker, utterance.strip()
+
+def speaker_is_excluded(
+    speaker: Optional[str],
+    excluded_speakers: Set[str],
+    partial_match: bool = False
+) -> bool:
+    if not speaker or not excluded_speakers:
+        return False
+
+    normalized = normalize_speaker_name(speaker)
+    if not normalized:
+        return False
+    if normalized in excluded_speakers:
+        return True
+    if partial_match:
+        return any(entry in normalized or normalized in entry for entry in excluded_speakers)
+    return False
+
+def collect_detected_speaker_labels(
+    files: Optional[List[Any]] = None,
+    manual_text: str = "",
+    max_lines_per_source: int = 50000
+) -> Counter:
+    """
+    Preview transcript-style speaker labels without running the full analysis.
+
+    This only detects labels already present in uploaded/pasted transcript text.
+    It does not infer real names or identify people.
+    """
+    counts: Counter = Counter()
+
+    def _scan_lines(lines: Iterable[str]):
+        for i, raw_line in enumerate(lines):
+            if i >= max_lines_per_source:
+                break
+            line = str(raw_line).strip()
+            if not line or line == "WEBVTT" or "-->" in line or line.isdigit():
+                continue
+            speaker, _utterance = extract_speaker_label(line)
+            if speaker:
+                counts[speaker.strip()] += 1
+
+    if files:
+        for file_obj in files:
+            try:
+                name = getattr(file_obj, "name", "").lower()
+                file_bytes = file_obj.getvalue()
+                if name.endswith((".txt", ".vtt")) or is_probably_vtt(file_bytes):
+                    text = file_bytes.decode(detect_text_encoding(file_bytes, "auto"), errors="replace")
+                    _scan_lines(text.splitlines())
+            except Exception:
+                continue
+
+    if manual_text:
+        try:
+            _scan_lines(str(manual_text).splitlines())
+        except Exception:
+            pass
+
+    return counts
+
 def estimate_row_count_from_bytes(file_bytes: bytes) -> int:
     if not file_bytes: return 0
     return file_bytes.count(b'\n') + 1
@@ -766,7 +872,12 @@ def read_rows_raw_lines(file_bytes: bytes, encoding_choice: str = "auto") -> Ite
     except UnicodeDecodeError:
         yield ("", None, None)
 
-def read_rows_vtt(file_bytes: bytes, encoding_choice: str = "auto") -> Iterable[Tuple[str, None, None]]:
+def read_rows_vtt(
+    file_bytes: bytes,
+    encoding_choice: str = "auto",
+    excluded_speakers: Optional[Set[str]] = None,
+    partial_speaker_match: bool = False
+) -> Iterable[Tuple[str, None, None]]:
     # robust VTT reader that yields tuples
     def _iter_lines(enc):
         bio = io.BytesIO(file_bytes)
@@ -778,11 +889,18 @@ def read_rows_vtt(file_bytes: bytes, encoding_choice: str = "auto") -> Iterable[
     for line in iterator:
         line = line.strip()
         if not line or line == "WEBVTT" or "-->" in line or line.isdigit(): continue
-        if ":" in line:
-            parts = line.split(":", 1)
-            if len(parts) > 1 and len(parts[0]) < MAX_SPEAKER_NAME_LENGTH and " " in parts[0]:
-                yield (parts[1].strip(), None, None)
+        speaker, utterance = extract_speaker_label(line)
+        if speaker:
+            if speaker_is_excluded(speaker, excluded_speakers or set(), partial_speaker_match):
                 continue
+            # Preserve prior behavior: strip multi-word speaker labels in VTT,
+            # but leave single-token labels intact to avoid accidentally changing
+            # non-speaker colon usage such as URL-like or code-like text.
+            if " " not in speaker:
+                yield (line, None, None)
+                continue
+            yield (utterance, None, None)
+            continue
         yield (line, None, None)
 
 def read_rows_pdf(file_bytes: bytes) -> Iterable[Tuple[str, None, None]]:
@@ -1041,6 +1159,8 @@ def process_chunk_iter(
     _trans = proc_conf.translate_map
     _stopwords = proc_conf.stopwords
     _lemma = proc_conf.use_lemmatization and (lemmatizer is not None)
+    _excluded_speakers = proc_conf.excluded_speakers
+    _partial_speaker_match = proc_conf.partial_speaker_match
     
     # defines set of "edge junk" to strip (quotes, brackets, dashes)
     # to catch "word" or (word) or -word-
@@ -1058,6 +1178,13 @@ def process_chunk_iter(
 
     for (raw_text, date_val, cat_val) in rows_iter:
         row_count += 1
+
+        # For raw transcript-style text, skip full utterances from excluded speakers
+        # before entities, token counts, bigrams, topics, and word clouds are updated.
+        if _excluded_speakers:
+            speaker, _utterance = extract_speaker_label(raw_text)
+            if speaker_is_excluded(speaker, _excluded_speakers, _partial_speaker_match):
+                continue
         
         # entities (Before lowercase)
         if raw_text:
@@ -1725,6 +1852,59 @@ with st.sidebar:
         translate_map=build_punct_translation(st.checkbox("Keep Hyphens"), st.checkbox("Keep Apostrophes"))
     )
     
+    st.markdown("**Transcript Speaker Exclusion**")
+    excluded_speaker_input = st.text_area(
+        "Exclude Speakers (comma-separated)",
+        "",
+        help=(
+            "Optional. For transcripts with speaker labels, enter speakers whose "
+            "entire utterances should be excluded before analysis. Exact matching "
+            "is used by default, for example: Bob Smith, Speaker 18 (Rikki)."
+        ),
+    )
+    partial_speaker_match = st.checkbox(
+        "Use partial speaker matching",
+        False,
+        help=(
+            "When enabled, an entry like 'Bob' also matches labels such as "
+            "'Bob Smith' or 'Speaker 4 (Bob)'. Leave off for safer exact matching."
+        ),
+    )
+
+    selected_detected_speakers: List[str] = []
+    detected_speaker_counts = collect_detected_speaker_labels(uploaded_files, manual_input)
+    with st.expander("Detected Speaker Labels", expanded=False):
+        if detected_speaker_counts:
+            detected_options = [
+                speaker for speaker, _count in detected_speaker_counts.most_common()
+            ]
+            selected_detected_speakers = st.multiselect(
+                "Select detected speakers to exclude",
+                detected_options,
+                format_func=lambda name: f"{name} ({detected_speaker_counts.get(name, 0):,} lines)",
+                help=(
+                    "Detected labels come from transcript structure, usually the text before a colon. "
+                    "This does not identify people; it only surfaces labels already present in the uploaded or pasted content."
+                ),
+            )
+        else:
+            st.caption("No transcript-style speaker labels detected in the current uploaded or pasted text.")
+
+    excluded_speakers = parse_speaker_exclusions(excluded_speaker_input)
+    excluded_speakers.update(
+        normalize_speaker_name(speaker)
+        for speaker in selected_detected_speakers
+        if normalize_speaker_name(speaker)
+    )
+    proc_conf.excluded_speakers = excluded_speakers
+    proc_conf.partial_speaker_match = partial_speaker_match
+    if excluded_speakers:
+        st.caption(
+            f"Speaker exclusion active for {len(excluded_speakers)} entr"
+            f"{'y' if len(excluded_speakers) == 1 else 'ies'}. "
+            "Re-scan files after changing this list."
+        )
+
     # stopwords
     user_sw = st.text_area("Stopwords (comma-separated)", "firstname.lastname, jane doe, okay, ok, really")
     phrases, singles = parse_user_stopwords(user_sw)
@@ -1773,7 +1953,11 @@ with st.sidebar:
     )
     st.session_state['sketch'].set_batch_size(doc_granularity)
     
-    current_settings_hash = f"{doc_granularity}_{proc_conf.min_word_len}"
+    speaker_settings_hash = "|".join(sorted(proc_conf.excluded_speakers))
+    current_settings_hash = (
+        f"{doc_granularity}_{proc_conf.min_word_len}_"
+        f"{speaker_settings_hash}_{int(proc_conf.partial_speaker_match)}"
+    )
     if 'last_settings_hash' not in st.session_state: 
         st.session_state['last_settings_hash'] = current_settings_hash
 
@@ -1899,7 +2083,11 @@ with tab_work:
                         batch_iter = read_rows_pptx(f_bytes)
 
                     elif fname.endswith(".vtt") or is_probably_vtt(f_bytes):
-                        batch_iter = read_rows_vtt(f_bytes)
+                        batch_iter = read_rows_vtt(
+                            f_bytes,
+                            excluded_speakers=proc_conf.excluded_speakers,
+                            partial_speaker_match=proc_conf.partial_speaker_match
+                        )
 
                     elif fname.endswith(".json"):
                         batch_iter = read_rows_json(f_bytes)
@@ -1988,7 +2176,11 @@ with tab_work:
                     elif is_pptx:
                         rows_iter = read_rows_pptx(file_bytes)
                     elif is_vtt:
-                        rows_iter = read_rows_vtt(file_bytes)
+                        rows_iter = read_rows_vtt(
+                            file_bytes,
+                            excluded_speakers=proc_conf.excluded_speakers,
+                            partial_speaker_match=proc_conf.partial_speaker_match
+                        )
                     elif is_json:
                         rows_iter = read_rows_json(file_bytes, scan_settings["json_key"])
                     else:
