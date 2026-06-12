@@ -1585,7 +1585,7 @@ def render_lit_case_study():
         ### 3. The "Transformation Language" View (TF-IDF & Topics)
         *   **The Question:** "Which words and themes make this document distinctive?"
         *   **The Signal:** TF-IDF and topic modeling.
-        *   **The Result:** The app can surface recurring language around change, bodies, speech, violence, kinship, place, exile, or divine intervention without requiring the user to predefine categories.
+        *   **The Result:** The app can surface recurring language around change, bodies, speech, violence, kinship, place, exile, or authority, causality, or agency without requiring the user to predefine categories.
         *   **The Value / Insight:** Instead of starting with a character list, the researcher can begin with repeated conceptual patterns and then decide which passages deserve close reading.
 
         ### 4. The "Structure vs. Substance" Check (Topic Modeling)
