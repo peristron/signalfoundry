@@ -21,6 +21,11 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import streamlit as st
+
+try:
+    import altair as alt
+except Exception:
+    alt = None
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from io import BytesIO
@@ -2672,74 +2677,90 @@ with tab_work:
                 st.info("Not enough phrase or TF-IDF signal yet to build theme evidence cards.")
 
             st.markdown("#### Signal Quadrant: Frequency vs. Distinctiveness")
+            st.caption(
+                "High-frequency terms show the backdrop; high-distinctiveness terms reveal stronger signal. "
+                "Hover over points for term names. The table below keeps the full ranked detail without cluttering the chart."
+            )
             quadrant_df = build_signal_quadrant_df(scanner, combined_counts, top_n=150)
             if not quadrant_df.empty:
-                st.caption(
-                    "The chart is intentionally unlabeled by default because dense term labels can overlap. "
-                    "Use the table below for full term names, or turn on selected labels for a few high-signal points."
-                )
-                label_points = st.checkbox(
-                    "Label selected high-signal points",
-                    value=False,
-                    key="quadrant_label_points",
-                    help="Adds labels for only a small number of high-distinctiveness points to avoid visual clutter."
-                )
-                label_limit = 8
-                if label_points:
-                    label_limit = st.slider(
-                        "Number of point labels",
-                        min_value=3,
-                        max_value=15,
-                        value=8,
-                        key="quadrant_label_limit"
-                    )
+                q_order = ["Core signal", "Niche signal", "Common backdrop", "Low evidence"]
                 q_colors = {
                     "Core signal": "#2ca02c",
                     "Common backdrop": "#1f77b4",
                     "Niche signal": "#ff7f0e",
                     "Low evidence": "#7f7f7f",
                 }
-                fig_q, ax_q = plt.subplots(figsize=(8.5, 4.8))
-                for q_name, q_group in quadrant_df.groupby("Quadrant"):
-                    ax_q.scatter(
-                        q_group["Frequency"],
-                        q_group["Distinctiveness"],
-                        label=q_name,
-                        alpha=0.68,
-                        s=38,
-                        color=q_colors.get(q_name, "#7f7f7f"),
-                        edgecolors="white",
-                        linewidths=0.4,
+                chart_df = quadrant_df.head(120).copy()
+                chart_df["Evidence Score"] = chart_df["Frequency"] * chart_df["Distinctiveness"]
+
+                x_split = float(chart_df["Frequency"].median())
+                y_split = float(chart_df["Distinctiveness"].median())
+
+                if alt is not None:
+                    base = alt.Chart(chart_df).encode(
+                        x=alt.X("Frequency:Q", title="Frequency"),
+                        y=alt.Y("Distinctiveness:Q", title="Distinctiveness"),
                     )
-                freq_mid = quadrant_df["Frequency"].median()
-                distinct_mid = quadrant_df["Distinctiveness"].median()
-                ax_q.axvline(freq_mid, color="#666666", linewidth=0.8, alpha=0.35, linestyle="--")
-                ax_q.axhline(distinct_mid, color="#666666", linewidth=0.8, alpha=0.35, linestyle="--")
-                if label_points:
-                    label_df = quadrant_df.sort_values(
-                        ["Distinctiveness", "Frequency"],
-                        ascending=[False, False]
-                    ).head(label_limit)
-                    for _, row in label_df.iterrows():
-                        ax_q.annotate(
-                            row["Term"],
-                            (row["Frequency"], row["Distinctiveness"]),
-                            xytext=(5, 5),
-                            textcoords="offset points",
-                            fontsize=8,
-                            alpha=0.9,
-                            bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.68),
+                    points = base.mark_circle(size=78, opacity=0.72).encode(
+                        color=alt.Color(
+                            "Quadrant:N",
+                            sort=q_order,
+                            scale=alt.Scale(
+                                domain=q_order,
+                                range=[q_colors.get(q, "#7f7f7f") for q in q_order],
+                            ),
+                            legend=alt.Legend(title="Quadrant", orient="bottom-right"),
+                        ),
+                        tooltip=[
+                            alt.Tooltip("Term:N", title="Term"),
+                            alt.Tooltip("Frequency:Q", title="Frequency"),
+                            alt.Tooltip("Distinctiveness:Q", title="Distinctiveness", format=".2f"),
+                            alt.Tooltip("Evidence Score:Q", title="Evidence Score", format=".1f"),
+                            alt.Tooltip("Quadrant:N", title="Quadrant"),
+                        ],
+                    )
+                    v_rule = alt.Chart(pd.DataFrame({"x": [x_split]})).mark_rule(strokeDash=[4, 4], opacity=0.45).encode(x="x:Q")
+                    h_rule = alt.Chart(pd.DataFrame({"y": [y_split]})).mark_rule(strokeDash=[4, 4], opacity=0.45).encode(y="y:Q")
+                    chart = (points + v_rule + h_rule).properties(
+                        height=430,
+                        title="Signal Quadrant",
+                    ).interactive()
+                    st.altair_chart(chart, use_container_width=True)
+                else:
+                    # Fallback for minimal environments where Altair is unavailable.
+                    fig_q, ax_q = plt.subplots(figsize=(8, 4.5))
+                    for q_name, q_group in chart_df.groupby("Quadrant"):
+                        ax_q.scatter(
+                            q_group["Frequency"],
+                            q_group["Distinctiveness"],
+                            label=q_name,
+                            alpha=0.72,
+                            s=42,
+                            color=q_colors.get(q_name, "#7f7f7f"),
                         )
-                ax_q.set_xlabel("Frequency")
-                ax_q.set_ylabel("Distinctiveness")
-                ax_q.set_title("Frequent terms are not always the most revealing terms", fontsize=12, pad=10)
-                ax_q.legend(loc="best", fontsize=8, frameon=True)
-                ax_q.grid(alpha=0.2)
-                ax_q.spines["top"].set_visible(False)
-                ax_q.spines["right"].set_visible(False)
-                fig_q.tight_layout()
-                st.pyplot(fig_q, use_container_width=True)
-                plt.close(fig_q)
+                    ax_q.axvline(x_split, linestyle="--", alpha=0.35)
+                    ax_q.axhline(y_split, linestyle="--", alpha=0.35)
+                    ax_q.set_xlabel("Frequency")
+                    ax_q.set_ylabel("Distinctiveness")
+                    ax_q.set_title("Signal Quadrant")
+                    ax_q.legend(loc="best", fontsize=8)
+                    ax_q.grid(alpha=0.2)
+                    st.pyplot(fig_q, use_container_width=True)
+                    plt.close(fig_q)
+
+                top_signal_df = chart_df.sort_values("Evidence Score", ascending=False).head(15)
+                with st.expander("Top high-signal points shown in the quadrant", expanded=False):
+                    st.dataframe(
+                        top_signal_df[["Term", "Frequency", "Distinctiveness", "Evidence Score", "Quadrant"]],
+                        use_container_width=True,
+                        column_config={
+                            "Term": st.column_config.TextColumn("Term"),
+                            "Frequency": st.column_config.NumberColumn("Frequency"),
+                            "Distinctiveness": st.column_config.NumberColumn("Distinctiveness", format="%.2f"),
+                            "Evidence Score": st.column_config.NumberColumn("Evidence Score", format="%.1f"),
+                            "Quadrant": st.column_config.TextColumn("Quadrant"),
+                        },
+                    )
 
                 st.dataframe(quadrant_df.head(80), use_container_width=True)
                 st.download_button(
